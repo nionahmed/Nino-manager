@@ -1,0 +1,639 @@
+@use '../../styles/variables' as *;
+
+// ============================================
+// ANIMATIONS
+// ============================================
+@keyframes slideInFromLeft {
+  from { transform: translateX(-40px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideInFromRight {
+  from { transform: translateX(40px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(108, 92, 231, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(108, 92, 231, 0.7); }
+}
+
+@keyframes timePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+// ============================================
+// PAGE LAYOUT
+// ============================================
+.calendar-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: $space-sm;
+}
+
+// ============================================
+// HEADER
+// ============================================
+.calendar-header {
+  @include glass(0.06, 16px);
+  border-radius: $radius-md;
+  margin: $space-md $space-md 0;
+  padding: $space-md;
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+  flex-shrink: 0;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-sm;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-arrow {
+  @include touch-target;
+  border-radius: $radius-sm;
+  color: var(--color-text-secondary);
+  transition: all $transition-fast;
+
+  &:hover {
+    background: var(--color-card-hover);
+    color: var(--color-text);
+  }
+
+  &:active {
+    transform: scale(0.9);
+  }
+}
+
+.header-title {
+  font-size: $font-lg;
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  flex: 1;
+  letter-spacing: -0.02em;
+
+  @include mobile {
+    font-size: $font-md;
+  }
+}
+
+.today-btn {
+  @include touch-target;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  padding: $space-xs $space-md;
+  border-radius: $radius-full;
+  font-size: $font-sm;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: var(--color-primary-bg);
+  border: 1px solid rgba(108, 92, 231, 0.2);
+  transition: all $transition-fast;
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--color-primary);
+    color: #fff;
+    box-shadow: $shadow-glow;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.view-switcher {
+  flex-shrink: 0;
+}
+
+// ============================================
+// TIMELINE VIEWS (Day / 3-Day / Week)
+// ============================================
+.timeline-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin: $space-sm $space-md 0;
+  min-height: 0;
+  overflow: hidden;
+
+  &.slide-left {
+    animation: slideInFromRight 0.3s $transition-base;
+  }
+
+  &.slide-right {
+    animation: slideInFromLeft 0.3s $transition-base;
+  }
+}
+
+// Column headers row
+.timeline-header {
+  display: flex;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: $space-sm;
+  margin-bottom: $space-xs;
+}
+
+.time-gutter-header {
+  width: 52px;
+  flex-shrink: 0;
+
+  @include mobile {
+    width: 40px;
+  }
+}
+
+.col-header {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: $space-xs 0;
+  transition: all $transition-fast;
+}
+
+.col-day-name {
+  font-size: $font-xs;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.col-day-num {
+  font-size: $font-md;
+  font-weight: 700;
+  color: var(--color-text);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-full;
+  transition: all $transition-fast;
+
+  &.today-badge {
+    background: var(--color-primary);
+    color: #fff;
+    box-shadow: $shadow-glow;
+  }
+}
+
+.col-header.is-today {
+  .col-day-name {
+    color: var(--color-primary);
+  }
+}
+
+// Scrollable grid
+.timeline-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  @include custom-scrollbar;
+  position: relative;
+
+  .view-week & {
+    @include mobile {
+      overflow-x: auto;
+    }
+  }
+}
+
+.timeline-grid {
+  display: flex;
+  position: relative;
+  min-height: fit-content;
+
+  .view-week & {
+    @include mobile {
+      min-width: 600px;
+    }
+  }
+}
+
+// Time gutter
+.time-gutter {
+  width: 52px;
+  flex-shrink: 0;
+  position: relative;
+
+  @include mobile {
+    width: 40px;
+  }
+}
+
+.time-label {
+  height: 60px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding-right: $space-sm;
+  position: relative;
+  top: -7px;
+
+  span {
+    font-size: $font-xs;
+    color: var(--color-text-tertiary);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .view-week & {
+    height: 30px;
+    top: -5px;
+
+    span {
+      font-size: 9px;
+    }
+  }
+}
+
+// Columns wrapper
+.columns-wrapper {
+  flex: 1;
+  display: flex;
+  position: relative;
+  min-width: 0;
+}
+
+// Day column
+.day-column {
+  flex: 1;
+  position: relative;
+  border-left: 1px solid var(--color-border);
+  min-width: 0;
+}
+
+.hour-line {
+  height: 60px;
+  border-bottom: 1px solid var(--color-border);
+  position: relative;
+
+  .view-week & {
+    height: 30px;
+  }
+}
+
+// Current time indicator
+.current-time-line {
+  position: absolute;
+  left: -1px;
+  right: 0;
+  height: 2px;
+  background: #e74c3c;
+  z-index: $z-base + 5;
+  pointer-events: none;
+
+  .time-dot {
+    position: absolute;
+    left: -5px;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    border-radius: $radius-full;
+    background: #e74c3c;
+    animation: timePulse 2s ease-in-out infinite;
+  }
+}
+
+// Task blocks
+.task-block {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  border-radius: $radius-sm;
+  background: var(--task-color, var(--color-primary));
+  cursor: pointer;
+  overflow: hidden;
+  z-index: $z-base + 2;
+  transition: transform $transition-fast, box-shadow $transition-fast, opacity $transition-fast;
+  min-height: 22px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  &:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    z-index: $z-base + 10;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &.status-done {
+    opacity: 0.65;
+
+    .task-name {
+      text-decoration: line-through;
+    }
+  }
+
+  &.status-missed {
+    opacity: 0.45;
+    filter: grayscale(0.5);
+  }
+
+  .view-3day & {
+    left: 1px;
+    right: 1px;
+  }
+
+  .view-week & {
+    left: 1px;
+    right: 1px;
+    border-radius: $radius-xs;
+  }
+}
+
+.task-block-inner {
+  padding: 3px 6px;
+  display: flex;
+  align-items: flex-start;
+  gap: 3px;
+  height: 100%;
+  overflow: hidden;
+
+  .view-week & {
+    padding: 1px 3px;
+    gap: 2px;
+  }
+}
+
+.task-status-icon {
+  color: rgba(255,255,255,0.85);
+  flex-shrink: 0;
+  font-size: 14px !important;
+  margin-top: 1px;
+
+  .view-week & {
+    font-size: 10px !important;
+  }
+}
+
+.task-name {
+  font-size: $font-xs;
+  font-weight: 600;
+  color: #fff;
+  @include truncate;
+  line-height: 1.3;
+
+  .view-week & {
+    font-size: 9px;
+  }
+}
+
+.task-time {
+  font-size: 9px;
+  color: rgba(255,255,255,0.75);
+  font-weight: 500;
+  white-space: nowrap;
+  margin-left: auto;
+
+  @include mobile {
+    display: none;
+  }
+}
+
+// ============================================
+// MONTH VIEW
+// ============================================
+.month-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin: $space-sm $space-md 0;
+  min-height: 0;
+  overflow: hidden;
+
+  &.slide-left {
+    animation: slideInFromRight 0.3s $transition-base;
+  }
+
+  &.slide-right {
+    animation: slideInFromLeft 0.3s $transition-base;
+  }
+}
+
+.month-header-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  padding-bottom: $space-sm;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: $space-xs;
+}
+
+.month-dow {
+  text-align: center;
+  font-size: $font-xs;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: $space-xs 0;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  flex: 1;
+  overflow-y: auto;
+  @include custom-scrollbar;
+}
+
+.month-cell {
+  @include glass(0.03, 10px);
+  border-radius: $radius-xs;
+  padding: $space-xs;
+  min-height: 72px;
+  cursor: pointer;
+  transition: all $transition-fast;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: relative;
+  border: 1px solid transparent;
+
+  &:hover {
+    background: var(--color-card-hover);
+    border-color: var(--color-border-strong);
+    transform: scale(1.02);
+    z-index: 2;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &.other-month {
+    opacity: 0.35;
+
+    &:hover {
+      opacity: 0.6;
+    }
+  }
+
+  &.is-today {
+    border-color: var(--color-primary);
+    background: var(--color-primary-bg);
+    animation: pulseGlow 3s ease-in-out infinite;
+
+    .month-day-num {
+      background: var(--color-primary);
+      color: #fff;
+    }
+  }
+
+  @include mobile {
+    min-height: 56px;
+    padding: 3px;
+  }
+}
+
+.month-day-num {
+  font-size: $font-sm;
+  font-weight: 700;
+  color: var(--color-text);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-full;
+  transition: all $transition-fast;
+
+  @include mobile {
+    width: 20px;
+    height: 20px;
+    font-size: $font-xs;
+  }
+}
+
+.task-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  align-items: center;
+}
+
+.task-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: $radius-full;
+  flex-shrink: 0;
+  transition: all $transition-fast;
+
+  &.dot-done {
+    opacity: 0.5;
+    box-shadow: 0 0 4px currentColor;
+  }
+
+  &.dot-missed {
+    opacity: 0.3;
+  }
+
+  @include mobile {
+    width: 5px;
+    height: 5px;
+  }
+}
+
+.more-count {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--color-text-tertiary);
+  line-height: 1;
+}
+
+.day-note-preview {
+  font-size: 8px;
+  font-style: italic;
+  color: var(--color-text-tertiary);
+  @include truncate;
+  line-height: 1.3;
+  margin-top: auto;
+
+  @include mobile {
+    display: none;
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@include tablet-up {
+  .calendar-header {
+    margin: $space-lg $space-lg 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-top {
+    flex: 1;
+  }
+
+  .view-switcher {
+    max-width: 320px;
+  }
+
+  .timeline-container,
+  .month-container {
+    margin: $space-sm $space-lg 0;
+  }
+
+  .month-cell {
+    min-height: 90px;
+    padding: $space-sm;
+  }
+}
+
+@include desktop {
+  .calendar-header {
+    margin: $space-lg $space-xl 0;
+  }
+
+  .timeline-container,
+  .month-container {
+    margin: $space-sm $space-xl 0;
+  }
+
+  .month-cell {
+    min-height: 100px;
+  }
+
+  .header-title {
+    font-size: $font-xl;
+  }
+}

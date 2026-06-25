@@ -1,0 +1,151 @@
+<div class="calendar-page page-enter"
+     (touchstart)="onTouchStart($event)"
+     (touchend)="onTouchEnd($event)">
+
+  <!-- Header -->
+  <header class="calendar-header">
+    <div class="header-top">
+      <div class="header-nav">
+        <button class="btn-icon nav-arrow" (click)="navigate(-1)" aria-label="Previous">
+          <span class="material-icons">chevron_left</span>
+        </button>
+        <h1 class="header-title">{{ headerText() }}</h1>
+        <button class="btn-icon nav-arrow" (click)="navigate(1)" aria-label="Next">
+          <span class="material-icons">chevron_right</span>
+        </button>
+      </div>
+      <button class="today-btn" (click)="goToToday()">
+        <span class="material-icons sm">today</span>
+        Today
+      </button>
+    </div>
+
+    <!-- View Switcher -->
+    <div class="segmented view-switcher">
+      @for (v of views; track v.key) {
+        <button class="seg-btn" [class.active]="currentView() === v.key"
+                (click)="setView(v.key)">
+          {{ v.label }}
+        </button>
+      }
+    </div>
+  </header>
+
+  <!-- Day / 3-Day / Week Timeline Views -->
+  @if (currentView() !== 'month') {
+    <div class="timeline-container"
+         [class.view-day]="currentView() === 'day'"
+         [class.view-3day]="currentView() === '3day'"
+         [class.view-week]="currentView() === 'week'"
+         [class.slide-left]="animationDirection() === 'left'"
+         [class.slide-right]="animationDirection() === 'right'">
+
+      <!-- Column Headers -->
+      <div class="timeline-header">
+        <div class="time-gutter-header"></div>
+        @for (date of dayColumnDates(); track trackByColIndex($index)) {
+          <div class="col-header" [class.is-today]="isToday(date)">
+            <span class="col-day-name">{{ getDayName(date) }}</span>
+            <span class="col-day-num" [class.today-badge]="isToday(date)">{{ date.getDate() }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Scrollable Grid -->
+      <div class="timeline-scroll">
+        <div class="timeline-grid">
+          <!-- Time Gutter -->
+          <div class="time-gutter">
+            @for (hour of hours; track trackByHour($index, hour)) {
+              <div class="time-label">
+                <span>{{ formatHour(hour) }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Columns -->
+          <div class="columns-wrapper">
+            @for (colTasks of positionedTasksByColumn(); track trackByColIndex($index)) {
+              <div class="day-column">
+                <!-- Hour grid lines -->
+                @for (hour of hours; track trackByHour($index, hour)) {
+                  <div class="hour-line"></div>
+                }
+
+                <!-- Current time indicator -->
+                @if (isToday(dayColumnDates()[$index])) {
+                  <div class="current-time-line" [style.top.px]="currentTimeTop()">
+                    <div class="time-dot"></div>
+                  </div>
+                }
+
+                <!-- Task blocks -->
+                @for (pt of colTasks; track trackByInstance($index, pt)) {
+                  <div class="task-block"
+                       [class.status-done]="pt.instance.status === 'done'"
+                       [class.status-missed]="pt.instance.status === 'missed'"
+                       [style.top.px]="pt.top"
+                       [style.height.px]="pt.height"
+                       [style.--task-color]="pt.task.color"
+                       (click)="cycleStatus(pt.instance, $event)">
+                    <div class="task-block-inner">
+                      <span class="material-icons xs task-status-icon">{{ getStatusIcon(pt.instance.status) }}</span>
+                      <span class="task-name">{{ pt.task.name }}</span>
+                      @if (currentView() === 'day') {
+                        <span class="task-time">{{ pt.task.startTime }} · {{ pt.task.duration }}m</span>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Month View -->
+  @if (currentView() === 'month') {
+    <div class="month-container"
+         [class.slide-left]="animationDirection() === 'left'"
+         [class.slide-right]="animationDirection() === 'right'">
+
+      <!-- Day-of-week headers -->
+      <div class="month-header-row">
+        @for (day of dayNames; track day) {
+          <div class="month-dow">{{ day }}</div>
+        }
+      </div>
+
+      <!-- Calendar grid -->
+      <div class="month-grid">
+        @for (day of monthDays(); track trackByDay($index, day)) {
+          <div class="month-cell"
+               [class.other-month]="!day.isCurrentMonth"
+               [class.is-today]="day.isToday"
+               (click)="goToDate(day.date)">
+            <span class="month-day-num">{{ day.date.getDate() }}</span>
+
+            <!-- Task dots -->
+            <div class="task-dots">
+              @for (t of day.tasks.slice(0, 3); track t.instance.id) {
+                <span class="task-dot" [style.background]="t.task.color"
+                      [class.dot-done]="t.instance.status === 'done'"
+                      [class.dot-missed]="t.instance.status === 'missed'"></span>
+              }
+              @if (day.tasks.length > 3) {
+                <span class="more-count">+{{ day.tasks.length - 3 }}</span>
+              }
+            </div>
+
+            <!-- Note preview -->
+            @if (day.note) {
+              <span class="day-note-preview">{{ day.note }}</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,59 @@
+<div class="focus-timer" [class.minimized]="isMinimized()" [class.is-break]="isBreak()">
+  <!-- Minimized View -->
+  @if (isMinimized()) {
+    <button class="mini-timer" (click)="toggleMinimize()">
+      <span class="mini-time">{{ displayTime() }}</span>
+      <span class="mini-label">{{ isBreak() ? 'Break' : 'Focus' }}</span>
+    </button>
+  } @else {
+    <!-- Full View -->
+    <div class="timer-header">
+      <h3 class="timer-title">
+        <span class="material-icons">{{ isBreak() ? 'coffee' : 'timer' }}</span>
+        {{ isBreak() ? 'Break Time' : 'Focus Mode' }}
+      </h3>
+      <button class="btn-icon" (click)="toggleMinimize()">
+        <span class="material-icons sm">minimize</span>
+      </button>
+    </div>
+
+    <div class="timer-circle-wrap">
+      <svg class="timer-svg" viewBox="0 0 120 120">
+        <circle class="timer-bg" cx="60" cy="60" r="54" />
+        <circle
+          class="timer-progress"
+          cx="60" cy="60" r="54"
+          [attr.stroke-dasharray]="circumference"
+          [attr.stroke-dashoffset]="strokeDashoffset()"
+          [class.break-stroke]="isBreak()"
+        />
+      </svg>
+      <div class="timer-display">
+        <span class="timer-time">{{ displayTime() }}</span>
+        <span class="timer-label">{{ isBreak() ? 'Break' : 'Focus' }}</span>
+      </div>
+    </div>
+
+    <div class="timer-controls">
+      @if (!isRunning()) {
+        <button class="btn-primary timer-btn" (click)="start()">
+          <span class="material-icons">play_arrow</span>
+          Start
+        </button>
+      } @else if (isPaused()) {
+        <button class="btn-primary timer-btn" (click)="start()">
+          <span class="material-icons">play_arrow</span>
+          Resume
+        </button>
+      } @else {
+        <button class="btn-secondary timer-btn" (click)="pause()">
+          <span class="material-icons">pause</span>
+          Pause
+        </button>
+      }
+      <button class="btn-ghost timer-btn" (click)="reset()">
+        <span class="material-icons">replay</span>
+      </button>
+    </div>
+  }
+</div>

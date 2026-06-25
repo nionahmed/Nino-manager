@@ -1,0 +1,623 @@
+@use '../../styles/variables' as *;
+
+// ============================================
+// HOST
+// ============================================
+:host {
+  display: contents;
+}
+
+// ============================================
+// DRAG HANDLE
+// ============================================
+.drag-handle-bar {
+  display: flex;
+  justify-content: center;
+  padding: $space-sm 0 $space-xs;
+
+  @include desktop {
+    display: none;
+  }
+}
+
+.drag-pill {
+  width: 36px;
+  height: 4px;
+  border-radius: $radius-full;
+  background: var(--color-border-strong);
+  opacity: 0.6;
+  transition: opacity $transition-fast;
+}
+
+.drag-handle-bar:hover .drag-pill {
+  opacity: 1;
+}
+
+// ============================================
+// EDITOR LAYOUT
+// ============================================
+.task-editor {
+  display: flex;
+  flex-direction: column;
+  padding: 0 $space-lg $space-lg;
+
+  @include mobile {
+    padding: 0 $space-md $space-md;
+  }
+}
+
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-sm 0 $space-md;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--color-surface);
+}
+
+.editor-title {
+  font-size: $font-lg;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--color-text), var(--color-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.close-btn {
+  @include touch-target;
+  border-radius: $radius-full;
+  color: var(--color-text-secondary);
+  transition: all $transition-fast;
+
+  &:hover {
+    background: var(--color-card-hover);
+    color: var(--color-text);
+    transform: rotate(90deg);
+  }
+}
+
+// ============================================
+// SCROLLABLE BODY
+// ============================================
+.editor-body {
+  display: flex;
+  flex-direction: column;
+  gap: $space-lg;
+  padding-bottom: $space-md;
+  @include custom-scrollbar;
+}
+
+// ============================================
+// FIELD
+// ============================================
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  font-size: $font-sm;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  .material-icons {
+    font-size: 16px;
+    opacity: 0.7;
+  }
+}
+
+// ============================================
+// TASK NAME INPUT
+// ============================================
+.task-name-input {
+  font-size: $font-md;
+  font-weight: 500;
+  padding: $space-md;
+  border-radius: $radius-md;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border);
+  transition: all $transition-fast;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-bg), $shadow-glow;
+  }
+}
+
+// ============================================
+// CATEGORY PILLS
+// ============================================
+.category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-sm;
+}
+
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  padding: $space-xs $space-md;
+  border-radius: $radius-full;
+  font-size: $font-sm;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  min-height: 44px;
+  transition: all $transition-fast;
+  background: color-mix(in srgb, var(--pill-color) 12%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--pill-color) 25%, transparent);
+  color: var(--color-text-secondary);
+
+  .material-icons {
+    font-size: 16px;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--pill-color) 20%, transparent);
+    border-color: color-mix(in srgb, var(--pill-color) 45%, transparent);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &.active {
+    background: color-mix(in srgb, var(--pill-color) 25%, transparent);
+    border-color: var(--pill-color);
+    color: var(--pill-color);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--pill-color) 30%, transparent);
+
+    .material-icons {
+      color: var(--pill-color);
+    }
+  }
+}
+
+// ============================================
+// TIME INPUT
+// ============================================
+.time-input {
+  font-size: $font-md;
+  font-weight: 500;
+  padding: $space-sm $space-md;
+  border-radius: $radius-md;
+  max-width: 180px;
+  color-scheme: dark;
+
+  [data-theme='light'] & {
+    color-scheme: light;
+  }
+}
+
+// ============================================
+// DURATION
+// ============================================
+.duration-badge {
+  margin-left: auto;
+  padding: 2px $space-sm;
+  border-radius: $radius-full;
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  font-size: $font-xs;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.duration-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: $radius-full;
+  background: var(--color-card);
+  outline: none;
+  cursor: pointer;
+  transition: background $transition-fast;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: 3px solid var(--color-surface);
+    box-shadow: 0 0 0 2px var(--color-primary), $shadow-md;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover {
+      transform: scale(1.15);
+      box-shadow: 0 0 0 2px var(--color-primary), $shadow-glow;
+    }
+  }
+
+  &::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: 3px solid var(--color-surface);
+    box-shadow: 0 0 0 2px var(--color-primary), $shadow-md;
+    cursor: pointer;
+    transition: all $transition-fast;
+  }
+
+  &:active::-webkit-slider-thumb {
+    transform: scale(1.2);
+  }
+}
+
+.duration-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-xs;
+  margin-top: $space-xs;
+}
+
+.preset-chip {
+  padding: $space-xs $space-md;
+  border-radius: $radius-full;
+  font-size: $font-sm;
+  font-weight: 500;
+  min-height: 44px;
+  min-width: 44px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all $transition-fast;
+  user-select: none;
+
+  &:hover {
+    background: var(--color-card-hover);
+    border-color: var(--color-border-strong);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &.active {
+    background: var(--color-primary-bg);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+}
+
+// ============================================
+// CUSTOM DAYS
+// ============================================
+.custom-days-field {
+  padding: $space-md;
+  border-radius: $radius-md;
+  @include glass(0.03, 12px);
+}
+
+.day-toggles {
+  display: flex;
+  gap: $space-sm;
+  justify-content: space-between;
+}
+
+.day-toggle {
+  @include touch-target(44px);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: $font-sm;
+  font-weight: 600;
+  background: var(--color-card);
+  border: 2px solid var(--color-border);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all $transition-fast;
+  user-select: none;
+  position: relative;
+
+  &:hover {
+    background: var(--color-card-hover);
+    border-color: var(--color-border-strong);
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.9);
+  }
+
+  &.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(108, 92, 231, 0.4);
+    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
+
+// ============================================
+// COLOR SELECTOR
+// ============================================
+.color-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-md;
+}
+
+.color-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  position: relative;
+  transition: all $transition-fast;
+  @include touch-target(44px);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2.5px solid transparent;
+    transition: all $transition-fast;
+  }
+
+  &:hover {
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active {
+    transform: scale(0.9);
+  }
+
+  &.active {
+    transform: scale(1.1);
+
+    &::before {
+      border-color: currentColor;
+      border-color: inherit;
+      /* Use the dot's own background as ring color */
+    }
+
+    .check-icon {
+      color: #fff;
+      font-size: 16px;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+    }
+  }
+}
+
+// ============================================
+// NOTES
+// ============================================
+.notes-toggle {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm 0;
+  font-size: $font-sm;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: color $transition-fast;
+  @include touch-target;
+  justify-content: flex-start;
+
+  &:hover {
+    color: var(--color-text);
+  }
+
+  .material-icons {
+    font-size: 16px;
+    opacity: 0.7;
+  }
+}
+
+.expand-icon {
+  margin-left: auto;
+  transition: transform $transition-fast;
+
+  &.expanded {
+    transform: rotate(180deg);
+  }
+}
+
+.notes-area {
+  border-radius: $radius-md;
+  padding: $space-md;
+  font-size: $font-base;
+  line-height: 1.6;
+  min-height: 100px;
+  resize: vertical;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-bg);
+  }
+}
+
+// ============================================
+// ACTION BUTTONS
+// ============================================
+.editor-actions {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+  padding-top: $space-md;
+  border-top: 1px solid var(--color-border);
+  margin-top: $space-sm;
+}
+
+.save-btn {
+  width: 100%;
+  padding: $space-md;
+  font-size: $font-md;
+  font-weight: 600;
+  border-radius: $radius-md;
+  gap: $space-sm;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 50%
+    );
+    opacity: 0;
+    transition: opacity $transition-fast;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+
+    &:hover {
+      box-shadow: none;
+    }
+
+    &::before {
+      display: none;
+    }
+  }
+}
+
+.duplicate-btn {
+  width: 100%;
+  padding: $space-sm $space-md;
+  border-radius: $radius-md;
+  font-weight: 500;
+  gap: $space-sm;
+
+  .material-icons {
+    font-size: 18px;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.delete-btn {
+  width: 100%;
+  padding: $space-sm $space-md;
+  border-radius: $radius-md;
+  font-weight: 500;
+  gap: $space-sm;
+
+  .material-icons {
+    font-size: 18px;
+  }
+}
+
+// ============================================
+// DELETE CONFIRMATION DIALOG
+// ============================================
+.delete-confirm-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: inherit;
+  padding: $space-lg;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.delete-confirm-dialog {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: $radius-lg;
+  padding: $space-xl;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  box-shadow: $shadow-xl;
+}
+
+.confirm-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-danger-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto $space-md;
+
+  .material-icons {
+    color: var(--color-danger);
+    font-size: 28px;
+  }
+}
+
+.confirm-title {
+  font-size: $font-lg;
+  font-weight: 700;
+  margin-bottom: $space-sm;
+}
+
+.confirm-text {
+  font-size: $font-sm;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: $space-lg;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: $space-sm;
+
+  .btn-secondary,
+  .btn-danger {
+    flex: 1;
+    padding: $space-sm $space-md;
+    border-radius: $radius-md;
+    font-weight: 500;
+    min-height: 44px;
+  }
+}
+
+// ============================================
+// STAGGER ANIMATION
+// ============================================
+.editor-body .field {
+  animation: fadeInUp 0.35s ease-out backwards;
+
+  @for $i from 1 through 10 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.04}s;
+    }
+  }
+}

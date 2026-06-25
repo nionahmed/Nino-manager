@@ -1,0 +1,136 @@
+@use '../../styles/variables' as *;
+
+.focus-timer {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: $radius-lg;
+  padding: $space-lg;
+  animation: fadeInUp 0.4s ease-out;
+
+  &.is-break {
+    border-color: rgba(0, 184, 148, 0.2);
+  }
+
+  &.minimized {
+    padding: 0;
+    background: transparent;
+    border: none;
+  }
+}
+
+.timer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $space-md;
+}
+
+.timer-title {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  font-size: $font-md;
+  font-weight: 600;
+
+  .material-icons {
+    color: var(--color-primary);
+    font-size: 20px;
+  }
+}
+
+.timer-circle-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto $space-lg;
+}
+
+.timer-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.timer-bg {
+  fill: none;
+  stroke: var(--color-card);
+  stroke-width: 6;
+}
+
+.timer-progress {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease;
+
+  &.break-stroke {
+    stroke: var(--color-success);
+  }
+}
+
+.timer-display {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-time {
+  font-size: $font-xxl;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
+}
+
+.timer-label {
+  font-size: $font-sm;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.timer-controls {
+  display: flex;
+  justify-content: center;
+  gap: $space-sm;
+}
+
+.timer-btn {
+  border-radius: $radius-full !important;
+  padding: $space-sm $space-lg !important;
+}
+
+// Minimized floating button
+.mini-timer {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm $space-md;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: $radius-full;
+  cursor: pointer;
+  animation: popIn 0.3s ease-out;
+  box-shadow: $shadow-glow;
+  border: none;
+  font-family: inherit;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.mini-time {
+  font-weight: 700;
+  font-size: $font-base;
+  font-variant-numeric: tabular-nums;
+}
+
+.mini-label {
+  font-size: $font-xs;
+  opacity: 0.8;
+  text-transform: uppercase;
+}

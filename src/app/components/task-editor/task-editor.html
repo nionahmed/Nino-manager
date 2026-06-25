@@ -1,0 +1,236 @@
+<!-- Overlay backdrop -->
+<div class="overlay" (click)="onOverlayClick()"></div>
+
+<!-- Modal sheet -->
+<div class="modal-sheet task-editor" (click)="onSheetClick($event)">
+  <!-- Drag handle -->
+  <div class="drag-handle-bar">
+    <span class="drag-pill"></span>
+  </div>
+
+  <!-- Header -->
+  <div class="editor-header">
+    <h2 class="editor-title">{{ title() }}</h2>
+    <button class="btn-icon close-btn" (click)="close.emit()" aria-label="Close">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
+  <!-- Scrollable content -->
+  <div class="editor-body">
+
+    <!-- Task Name -->
+    <div class="field">
+      <label class="field-label">
+        <span class="material-icons sm">edit</span>
+        Task Name
+      </label>
+      <input
+        type="text"
+        class="input task-name-input"
+        placeholder="Task name..."
+        [ngModel]="name()"
+        (ngModelChange)="name.set($event)"
+        autofocus
+      />
+    </div>
+
+    <!-- Category -->
+    <div class="field">
+      <label class="field-label">
+        <span class="material-icons sm">category</span>
+        Category
+      </label>
+      <div class="category-pills">
+        @for (cat of categories; track cat) {
+          <button
+            class="category-pill"
+            [class.active]="category() === cat"
+            [style.--pill-color]="categoryColors[cat]"
+            (click)="selectCategory(cat)"
+          >
+            <span class="material-icons xs">{{ categoryIcons[cat] }}</span>
+            {{ categoryLabels[cat] }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Start Time -->
+    <div class="field">
+      <label class="field-label">
+        <span class="material-icons sm">schedule</span>
+        Start Time
+      </label>
+      <input
+        type="time"
+        class="input time-input"
+        [ngModel]="startTime()"
+        (ngModelChange)="startTime.set($event)"
+      />
+    </div>
+
+    <!-- Duration -->
+    <div class="field">
+      <label class="field-label">
+        <span class="material-icons sm">timelapse</span>
+        Duration
+        <span class="duration-badge">{{ durationDisplay() }}</span>
+      </label>
+      <input
+        type="range"
+        class="duration-slider"
+        min="5"
+        max="240"
+        step="5"
+        [ngModel]="duration()"
+        (input)="onDurationSlider($event)"
+      />
+      <div class="duration-presets">
+        @for (preset of durationPresets; track preset.value) {
+          <button
+            class="preset-chip"
+            [class.active]="duration() === preset.value"
+            (click)="setDuration(preset.value)"
+          >
+            {{ preset.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Repeat -->
+    <div class="field">
+      <label class="field-label">
+        <span class="material-icons sm">repeat</span>
+        Repeat
+      </label>
+      <div class="segmented">
+        @for (opt of repeatOptions; track opt.value) {
+          <button
+            class="seg-btn"
+            [class.active]="repeat() === opt.value"
+            (click)="setRepeat(opt.value)"
+          >
+            {{ opt.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Custom Days -->
+    @if (repeat() === 'custom') {
+      <div class="field custom-days-field animate-fade-in-up">
+        <label class="field-label">
+          <span class="material-icons sm">date_range</span>
+          Select Days
+        </label>
+        <div class="day-toggles">
+          @for (day of dayLabels; track day.value) {
+            <button
+              class="day-toggle"
+              [class.active]="isDayActive(day.value)"
+              [attr.aria-label]="day.label"
+              (click)="toggleDay(day.value)"
+            >
+              {{ day.short }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Color -->
+    <div class="field">
+      <label class="field-label">
+        <span class="material-icons sm">palette</span>
+        Color
+      </label>
+      <div class="color-dots">
+        @for (c of colors; track c) {
+          <button
+            class="color-dot"
+            [class.active]="color() === c"
+            [style.background]="c"
+            [attr.aria-label]="'Color ' + c"
+            (click)="selectColor(c)"
+          >
+            @if (color() === c) {
+              <span class="material-icons xs check-icon">check</span>
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="field">
+      <button class="notes-toggle" (click)="toggleNotes()">
+        <span class="material-icons sm">notes</span>
+        Notes
+        <span class="material-icons sm expand-icon" [class.expanded]="notesExpanded()">
+          expand_more
+        </span>
+      </button>
+      @if (notesExpanded()) {
+        <textarea
+          class="textarea notes-area animate-fade-in-up"
+          placeholder="Add notes..."
+          rows="3"
+          [ngModel]="notes()"
+          (ngModelChange)="notes.set($event)"
+        ></textarea>
+      }
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="editor-actions">
+    <button
+      class="btn-primary save-btn"
+      [disabled]="!isValid()"
+      (click)="save()"
+    >
+      <span class="material-icons sm">check</span>
+      Save
+    </button>
+
+    <button
+      class="btn-secondary duplicate-btn"
+      [disabled]="!isValid()"
+      (click)="duplicate()"
+    >
+      <span class="material-icons sm">content_copy</span>
+      Quick Duplicate
+    </button>
+
+    @if (isEditing()) {
+      <button class="btn-danger delete-btn" (click)="confirmDelete()">
+        <span class="material-icons sm">delete</span>
+        Delete
+      </button>
+    }
+  </div>
+
+  <!-- Delete Confirmation -->
+  @if (showDeleteConfirm()) {
+    <div class="delete-confirm-overlay" (click)="cancelDelete()">
+      <div class="delete-confirm-dialog animate-scale-in" (click)="onSheetClick($event)">
+        <div class="confirm-icon">
+          <span class="material-icons lg">warning</span>
+        </div>
+        <h3 class="confirm-title">Delete Task?</h3>
+        <p class="confirm-text">
+          This will permanently remove <strong>{{ name() }}</strong> and all its instances. This action cannot be undone.
+        </p>
+        <div class="confirm-actions">
+          <button class="btn-secondary" (click)="cancelDelete()">Cancel</button>
+          <button class="btn-danger" (click)="deleteTask()">
+            <span class="material-icons sm">delete</span>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

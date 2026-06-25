@@ -1,0 +1,71 @@
+<div class="login-page">
+  <!-- Animated background orbs -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Login card -->
+  <div class="login-card" [class.shake]="shakeError()">
+    <!-- Logo -->
+    <div class="logo-container">
+      <div class="logo-glow">
+        <span class="material-icons logo-icon">auto_awesome</span>
+      </div>
+    </div>
+
+    <!-- Title -->
+    <h1 class="app-title">Nino Manager</h1>
+    <p class="app-subtitle">Your Personal Routine Planner</p>
+
+    <!-- Password input -->
+    <div class="input-group">
+      <div class="input-wrapper">
+        <span class="material-icons input-icon sm">lock</span>
+        <input
+          [type]="showPassword() ? 'text' : 'password'"
+          class="password-input"
+          placeholder="Enter password"
+          [value]="password()"
+          (input)="onPasswordInput($any($event.target).value)"
+          (keydown)="onKeyDown($event)"
+          autocomplete="current-password"
+        />
+        <button
+          type="button"
+          class="toggle-password"
+          (click)="togglePasswordVisibility()"
+          aria-label="Toggle password visibility"
+        >
+          <span class="material-icons sm">
+            {{ showPassword() ? 'visibility_off' : 'visibility' }}
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Error message -->
+    @if (errorMessage()) {
+      <div class="error-message">
+        <span class="material-icons sm">error_outline</span>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Login button -->
+    <button
+      class="login-btn"
+      (click)="login()"
+      [disabled]="isLoading()"
+    >
+      @if (isLoading()) {
+        <span class="material-icons spin-icon sm">progress_activity</span>
+        <span>Signing in...</span>
+      } @else {
+        <span class="material-icons sm">login</span>
+        <span>Sign In</span>
+      }
+    </button>
+  </div>
+</div>

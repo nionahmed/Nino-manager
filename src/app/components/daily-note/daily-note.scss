@@ -1,0 +1,64 @@
+@use '../../styles/variables' as *;
+
+.daily-note {
+  width: 100%;
+}
+
+.note-display {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  width: 100%;
+  padding: $space-sm $space-md;
+  background: var(--color-card);
+  border: 1px dashed var(--color-border);
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+
+  &:hover {
+    background: var(--color-card-hover);
+    border-color: var(--color-primary);
+  }
+}
+
+.note-icon {
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.note-text {
+  font-size: $font-sm;
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.note-placeholder {
+  font-size: $font-sm;
+  color: var(--color-text-tertiary);
+}
+
+.note-edit {
+  display: flex;
+  gap: $space-sm;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.note-input {
+  flex: 1;
+  font-size: $font-sm;
+}
+
+.note-actions {
+  display: flex;
+  gap: $space-xs;
+}
+
+.btn-sm {
+  padding: $space-xs $space-sm !important;
+  min-height: 36px;
+  min-width: 36px;
+}

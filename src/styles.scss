@@ -1,1 +1,450 @@
-/* You can add global styles to this file, and also import other style files */
+@use 'app/styles/variables' as *;
+@use 'app/styles/animations';
+
+// ============================================
+// CSS CUSTOM PROPERTIES (THEMING)
+// ============================================
+:root {
+  // Dark theme (default)
+  --color-bg: #0a0a1a;
+  --color-bg-secondary: #0e0e24;
+  --color-surface: #12122a;
+  --color-surface-hover: #1a1a3a;
+  --color-card: rgba(255, 255, 255, 0.04);
+  --color-card-hover: rgba(255, 255, 255, 0.07);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+  --color-text: #f0f0f0;
+  --color-text-secondary: #8a8a9a;
+  --color-text-tertiary: #5a5a6a;
+  --color-primary: #6c5ce7;
+  --color-primary-hover: #7c6cf7;
+  --color-primary-bg: rgba(108, 92, 231, 0.12);
+  --color-secondary: #00cec9;
+  --color-success: #00b894;
+  --color-success-bg: rgba(0, 184, 148, 0.12);
+  --color-warning: #fdcb6e;
+  --color-warning-bg: rgba(253, 203, 110, 0.12);
+  --color-danger: #e17055;
+  --color-danger-bg: rgba(225, 112, 85, 0.12);
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-nav-bg: rgba(10, 10, 26, 0.85);
+  --color-input-bg: rgba(255, 255, 255, 0.05);
+  --glass-opacity: 0.05;
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='light'] {
+  --color-bg: #f0f0fa;
+  --color-bg-secondary: #e8e8f5;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f5f5ff;
+  --color-card: rgba(255, 255, 255, 0.8);
+  --color-card-hover: rgba(255, 255, 255, 0.95);
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-strong: rgba(0, 0, 0, 0.15);
+  --color-text: #1a1a2e;
+  --color-text-secondary: #6a6a7a;
+  --color-text-tertiary: #9a9aaa;
+  --color-primary: #6c5ce7;
+  --color-primary-hover: #5a4ad5;
+  --color-primary-bg: rgba(108, 92, 231, 0.08);
+  --color-overlay: rgba(0, 0, 0, 0.3);
+  --color-nav-bg: rgba(255, 255, 255, 0.85);
+  --color-input-bg: rgba(0, 0, 0, 0.04);
+  --glass-opacity: 0.7;
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+// ============================================
+// RESET & BASE
+// ============================================
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: $font-family;
+  font-size: $font-base;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  transition: background-color $transition-slow, color $transition-slow;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color $transition-fast;
+  &:hover {
+    color: var(--color-primary-hover);
+  }
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  outline: none;
+  border: none;
+  background: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+// ============================================
+// SCROLLBAR
+// ============================================
+body {
+  @include custom-scrollbar;
+}
+
+// ============================================
+// UTILITY CLASSES
+// ============================================
+
+// --- Layout ---
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.flex-wrap { flex-wrap: wrap; }
+.gap-xs { gap: $space-xs; }
+.gap-sm { gap: $space-sm; }
+.gap-md { gap: $space-md; }
+.gap-lg { gap: $space-lg; }
+.gap-xl { gap: $space-xl; }
+.flex-1 { flex: 1; }
+
+// --- Text ---
+.text-center { text-align: center; }
+.text-sm { font-size: $font-sm; }
+.text-base { font-size: $font-base; }
+.text-md { font-size: $font-md; }
+.text-lg { font-size: $font-lg; }
+.text-xl { font-size: $font-xl; }
+.text-xxl { font-size: $font-xxl; }
+.text-secondary { color: var(--color-text-secondary); }
+.text-tertiary { color: var(--color-text-tertiary); }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+
+// --- Cards ---
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: $radius-md;
+  padding: $space-md;
+  transition: background $transition-fast, border-color $transition-fast, box-shadow $transition-fast;
+
+  &:hover {
+    background: var(--color-card-hover);
+    border-color: var(--color-border-strong);
+  }
+}
+
+.glass-card {
+  @include glass;
+  border-radius: $radius-md;
+  padding: $space-md;
+  transition: all $transition-fast;
+}
+
+// --- Buttons ---
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-sm;
+  padding: $space-sm $space-md;
+  border-radius: $radius-sm;
+  font-weight: 500;
+  font-size: $font-base;
+  transition: all $transition-fast;
+  @include touch-target;
+  white-space: nowrap;
+  user-select: none;
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.btn-primary {
+  @extend .btn;
+  background: var(--color-primary);
+  color: #fff;
+  &:hover {
+    background: var(--color-primary-hover);
+    box-shadow: $shadow-glow;
+  }
+}
+
+.btn-secondary {
+  @extend .btn;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  &:hover {
+    background: var(--color-card-hover);
+    border-color: var(--color-border-strong);
+  }
+}
+
+.btn-danger {
+  @extend .btn;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  &:hover {
+    background: var(--color-danger);
+    color: #fff;
+  }
+}
+
+.btn-ghost {
+  @extend .btn;
+  &:hover {
+    background: var(--color-card);
+  }
+}
+
+.btn-icon {
+  @include touch-target;
+  border-radius: $radius-sm;
+  transition: all $transition-fast;
+  &:hover {
+    background: var(--color-card);
+  }
+  &:active {
+    transform: scale(0.9);
+  }
+}
+
+// --- Inputs ---
+.input {
+  width: 100%;
+  padding: $space-sm $space-md;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border);
+  border-radius: $radius-sm;
+  color: var(--color-text);
+  font-size: $font-base;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+  min-height: 44px;
+
+  &::placeholder {
+    color: var(--color-text-tertiary);
+  }
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-bg);
+  }
+}
+
+.textarea {
+  @extend .input;
+  resize: vertical;
+  min-height: 80px;
+}
+
+// --- Badges ---
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  padding: 2px $space-sm;
+  border-radius: $radius-full;
+  font-size: $font-xs;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// --- Chips ---
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  padding: $space-xs $space-sm;
+  border-radius: $radius-full;
+  font-size: $font-sm;
+  font-weight: 500;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: all $transition-fast;
+  user-select: none;
+
+  &:hover {
+    background: var(--color-card-hover);
+  }
+
+  &.active {
+    background: var(--color-primary-bg);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+}
+
+// --- Overlay ---
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  z-index: $z-overlay;
+  animation: fadeIn 0.2s ease-out;
+}
+
+// --- Modal ---
+.modal-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 90vh;
+  max-height: 90dvh;
+  background: var(--color-surface);
+  border-radius: $radius-xl $radius-xl 0 0;
+  z-index: $z-modal;
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow-y: auto;
+  @include custom-scrollbar;
+
+  @include desktop {
+    bottom: auto;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    max-width: 560px;
+    width: 90%;
+    max-height: 85vh;
+    border-radius: $radius-xl;
+    animation: scaleIn 0.3s ease-out;
+  }
+}
+
+// --- Segmented Control ---
+.segmented {
+  display: flex;
+  background: var(--color-card);
+  border-radius: $radius-sm;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid var(--color-border);
+
+  .seg-btn {
+    flex: 1;
+    padding: $space-xs $space-sm;
+    border-radius: 6px;
+    font-size: $font-sm;
+    font-weight: 500;
+    text-align: center;
+    transition: all $transition-fast;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    @include touch-target(36px);
+
+    &:hover {
+      color: var(--color-text);
+      background: var(--color-card-hover);
+    }
+
+    &.active {
+      background: var(--color-primary);
+      color: #fff;
+      box-shadow: $shadow-sm;
+    }
+  }
+}
+
+// --- Progress Bar ---
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--color-card);
+  border-radius: $radius-full;
+  overflow: hidden;
+
+  .progress-fill {
+    height: 100%;
+    border-radius: $radius-full;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  }
+}
+
+// --- Material Icons ---
+.material-icons {
+  font-family: 'Material Icons Round';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'liga';
+
+  &.sm { font-size: 18px; }
+  &.xs { font-size: 16px; }
+  &.lg { font-size: 32px; }
+  &.xl { font-size: 48px; }
+}
+
+// ============================================
+// PAGE TRANSITIONS
+// ============================================
+.page-enter {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+// ============================================
+// SELECTION
+// ============================================
+::selection {
+  background: rgba(108, 92, 231, 0.3);
+  color: #fff;
+}

@@ -1,0 +1,195 @@
+<div class="dashboard page-enter">
+  <header class="dashboard-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <span class="material-icons title-icon">analytics</span>
+        Dashboard
+      </h1>
+      <p class="page-subtitle">Your performance at a glance</p>
+    </div>
+  </header>
+
+  <div class="widget-grid">
+
+    <section class="glass-card widget widget--score">
+      <h2 class="widget-title">
+        <span class="material-icons sm">check_circle</span>
+        Today's Score
+      </h2>
+      <div class="donut-wrapper">
+        <canvas #donutCanvas></canvas>
+        <div class="donut-center">
+          <span class="donut-value" [style.color]="scoreColor()">
+            {{ animatedScore() }}<small>%</small>
+          </span>
+          <span class="donut-label">completed</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="glass-card widget widget--weekly">
+      <h2 class="widget-title">
+        <span class="material-icons sm">bar_chart</span>
+        Weekly Trend
+      </h2>
+      <div class="chart-container">
+        <canvas #barCanvas></canvas>
+      </div>
+    </section>
+
+    <section class="glass-card widget widget--streak">
+      <h2 class="widget-title">
+        <span class="material-icons sm">local_fire_department</span>
+        Streak
+      </h2>
+      <div class="streak-content">
+        <div class="streak-flame" [class.active]="streak() > 0">🔥</div>
+        <span class="streak-number">{{ animatedStreak() }}</span>
+        <span class="streak-label">
+          consecutive day{{ streak() !== 1 ? 's' : '' }} ≥ 80%
+        </span>
+      </div>
+    </section>
+
+    <section class="glass-card widget widget--breakdown">
+      <h2 class="widget-title">
+        <span class="material-icons sm">pie_chart</span>
+        Time Breakdown
+      </h2>
+      <div class="chart-container">
+        @if (hasBreakdown()) {
+          <canvas #pieCanvas></canvas>
+        } @else {
+          <div class="empty-state">
+            <span class="material-icons lg">donut_large</span>
+            <p>No data yet this week</p>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="glass-card widget widget--productivity">
+      <h2 class="widget-title">
+        <span class="material-icons sm">speed</span>
+        Productivity
+      </h2>
+      <div class="gauge-wrapper">
+        <svg viewBox="0 0 120 120" class="gauge-svg">
+          <circle
+            cx="60" cy="60" r="54"
+            fill="none"
+            stroke="rgba(255,255,255,0.06)"
+            stroke-width="8"
+          />
+          <circle
+            cx="60" cy="60" r="54"
+            fill="none"
+            stroke="var(--color-primary)"
+            stroke-width="8"
+            stroke-linecap="round"
+            [attr.stroke-dasharray]="gaugeCircumference"
+            [attr.stroke-dashoffset]="gaugeCircumference - (gaugeCircumference * productivityPct() / 100)"
+            class="gauge-fill"
+          />
+        </svg>
+        <div class="gauge-center">
+          <span class="gauge-value">{{ animatedProductivity() }}%</span>
+          <span class="gauge-label">{{ productiveHours() | number:'1.1-1' }}h / 18h</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="glass-card widget widget--bestworst">
+      <h2 class="widget-title">
+        <span class="material-icons sm">compare_arrows</span>
+        Best &amp; Worst
+      </h2>
+      <div class="bestworst-cards">
+        @if (bestWorstDay().best) {
+          <div class="mini-card mini-card--best">
+            <span class="material-icons mini-icon">arrow_upward</span>
+            <div class="mini-info">
+              <span class="mini-day">{{ bestWorstDay().best!.dayName }}</span>
+              <span class="mini-pct">{{ bestWorstDay().best!.pct }}%</span>
+            </div>
+          </div>
+        }
+        @if (bestWorstDay().worst) {
+          <div class="mini-card mini-card--worst">
+            <span class="material-icons mini-icon">arrow_downward</span>
+            <div class="mini-info">
+              <span class="mini-day">{{ bestWorstDay().worst!.dayName }}</span>
+              <span class="mini-pct">{{ bestWorstDay().worst!.pct }}%</span>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="glass-card widget widget--heatmap">
+      <h2 class="widget-title">
+        <span class="material-icons sm">calendar_month</span>
+        {{ currentMonthName() }}
+      </h2>
+      <div class="heatmap-grid">
+        @for (cell of heatmapCells(); track cell.date) {
+          <div
+            class="heatmap-cell"
+            [style.background]="getHeatmapColor(cell.pct)"
+            (mouseenter)="showTooltip($event, cell)"
+            (mouseleave)="hideTooltip()"
+            (touchstart)="showTooltip($event, cell)"
+            (touchend)="hideTooltip()"
+          >
+            <span class="heatmap-day">{{ cell.day }}</span>
+          </div>
+        }
+      </div>
+      <div class="heatmap-legend">
+        <span class="legend-label">Less</span>
+        <div class="legend-swatch" style="background: rgba(108,92,231,0.06)"></div>
+        <div class="legend-swatch" style="background: rgba(108,92,231,0.15)"></div>
+        <div class="legend-swatch" style="background: rgba(108,92,231,0.3)"></div>
+        <div class="legend-swatch" style="background: rgba(108,92,231,0.5)"></div>
+        <div class="legend-swatch" style="background: rgba(108,92,231,0.7)"></div>
+        <div class="legend-swatch" style="background: rgba(108,92,231,0.95)"></div>
+        <span class="legend-label">More</span>
+      </div>
+    </section>
+
+    <section class="glass-card widget widget--stat">
+      <h2 class="widget-title">
+        <span class="material-icons sm">do_not_disturb</span>
+        Unproductive
+      </h2>
+      <div class="stat-content">
+        <span class="stat-value stat-value--warning">
+          {{ formatMinutes(unproductiveMinutes()) }}
+        </span>
+        <span class="stat-label">this week</span>
+      </div>
+    </section>
+
+    <section class="glass-card widget widget--stat">
+      <h2 class="widget-title">
+        <span class="material-icons sm">sports_esports</span>
+        Entertainment
+      </h2>
+      <div class="stat-content">
+        <span class="stat-value stat-value--danger">
+          {{ formatMinutes(entertainmentMinutes()) }}
+        </span>
+        <span class="stat-label">this week</span>
+      </div>
+    </section>
+
+  </div>@if (tooltipVisible()) {
+    <div
+      class="heatmap-tooltip"
+      [style.left.px]="tooltipX()"
+      [style.top.px]="tooltipY()"
+    >
+      {{ tooltipText() }}
+    </div>
+  }
+</div>

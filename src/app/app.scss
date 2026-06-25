@@ -1,0 +1,239 @@
+@use 'styles/variables' as *;
+
+// ============================================
+// SIDEBAR (Desktop)
+// ============================================
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 220px;
+  background: var(--color-nav-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  z-index: $z-sticky;
+  transition: width $transition-base;
+
+  @include mobile {
+    display: none;
+  }
+
+  @include tablet {
+    width: 72px;
+
+    .brand-text,
+    .nav-label {
+      display: none;
+    }
+
+    .sidebar-brand {
+      justify-content: center;
+    }
+
+    .nav-item {
+      justify-content: center;
+      padding: $space-sm;
+    }
+  }
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-lg $space-md;
+  border-bottom: 1px solid var(--color-border);
+
+  .brand-icon {
+    font-size: 28px;
+    color: var(--color-primary);
+    animation: glow 3s ease-in-out infinite;
+  }
+
+  .brand-text {
+    font-size: $font-xl;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: $space-sm;
+  gap: $space-xxs;
+}
+
+.sidebar-footer {
+  padding: $space-sm;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: $space-xxs;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: $space-sm $space-md;
+  border-radius: $radius-sm;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  font-size: $font-base;
+  transition: all $transition-fast;
+  cursor: pointer;
+  text-decoration: none;
+  @include touch-target;
+
+  .material-icons {
+    font-size: 22px;
+    transition: color $transition-fast;
+  }
+
+  &:hover {
+    background: var(--color-card);
+    color: var(--color-text);
+  }
+
+  &.active {
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+
+    .material-icons {
+      color: var(--color-primary);
+    }
+  }
+
+  &.add-btn {
+    background: linear-gradient(135deg, var(--color-primary), #8b7cf7);
+    color: #fff;
+    margin: $space-sm 0;
+
+    .material-icons {
+      color: #fff;
+    }
+
+    &:hover {
+      box-shadow: $shadow-glow;
+      transform: translateY(-1px);
+    }
+  }
+}
+
+// ============================================
+// MAIN CONTENT
+// ============================================
+.main-content {
+  min-height: 100vh;
+  min-height: 100dvh;
+  transition: padding $transition-base;
+
+  &.has-nav {
+    @include tablet-up {
+      padding-left: 72px;
+    }
+
+    @include desktop {
+      padding-left: 220px;
+    }
+  }
+
+  &.has-bottom-nav {
+    @include mobile {
+      padding-bottom: 80px;
+    }
+  }
+}
+
+// ============================================
+// BOTTOM NAV (Mobile)
+// ============================================
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: var(--color-nav-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: $z-sticky;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+
+  @include tablet-up {
+    display: none;
+  }
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: $space-xs;
+  color: var(--color-text-tertiary);
+  font-size: $font-xs;
+  transition: all $transition-fast;
+  text-decoration: none;
+  @include touch-target;
+  border-radius: $radius-sm;
+
+  .material-icons {
+    font-size: 24px;
+    transition: all $transition-fast;
+  }
+
+  &:hover,
+  &.active {
+    color: var(--color-primary);
+
+    .material-icons {
+      color: var(--color-primary);
+    }
+  }
+
+  &.active {
+    .material-icons {
+      transform: scale(1.1);
+    }
+  }
+
+  &.add-fab {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), #8b7cf7);
+    color: #fff;
+    margin-top: -20px;
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+    flex-direction: row;
+    transition: all $transition-fast;
+
+    .material-icons {
+      font-size: 28px;
+      color: #fff;
+    }
+
+    &:active {
+      transform: scale(0.9);
+    }
+  }
+}
+
+.bottom-nav-label {
+  font-size: 10px;
+  font-weight: 500;
+}

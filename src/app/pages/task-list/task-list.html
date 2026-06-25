@@ -1,0 +1,308 @@
+<div class="task-list-page page-enter">
+
+  <!-- ═══ Header ═══ -->
+  <header class="page-header">
+    <h1 class="page-title">My Tasks</h1>
+    <p class="page-subtitle">{{ getFilterLabel() }}</p>
+  </header>
+
+  <!-- ═══ Filter Tabs ═══ -->
+  <div class="segmented filter-tabs">
+    <button
+      class="seg-btn"
+      [class.active]="activeFilter() === 'today'"
+      (click)="setFilter('today')">
+      Today
+    </button>
+    <button
+      class="seg-btn"
+      [class.active]="activeFilter() === 'week'"
+      (click)="setFilter('week')">
+      This Week
+    </button>
+    <button
+      class="seg-btn"
+      [class.active]="activeFilter() === 'all'"
+      (click)="setFilter('all')">
+      All
+    </button>
+  </div>
+
+  <!-- ═══ Progress Bar ═══ -->
+  <div class="progress-section animate-fade-in">
+    <div class="progress-label">
+      <span class="progress-text">
+        <span class="material-icons sm">check_circle</span>
+        {{ completedTasks() }} / {{ totalTasks() }} completed
+      </span>
+      <span class="progress-pct">{{ progressPct() }}%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="progressPct()"></div>
+    </div>
+  </div>
+
+  <!-- ═══ Task Groups ═══ -->
+  @if (!isEmpty()) {
+
+    <!-- Morning -->
+    @if (morningTasks().length > 0) {
+      <section class="time-group animate-fade-in-up">
+        <div class="group-header">
+          <span class="material-icons group-icon morning-icon">wb_twilight</span>
+          <h2 class="group-title">Morning</h2>
+          <span class="group-count">{{ morningTasks().length }}</span>
+        </div>
+        <div class="task-cards">
+          @for (item of morningTasks(); track item.instance.id) {
+            <div
+              class="task-card glass-card"
+              [class.status-done]="item.instance.status === 'done'"
+              [class.status-missed]="item.instance.status === 'missed'"
+              [class.status-not-required]="item.instance.status === 'not-required'"
+              [style.--task-color]="item.task.color">
+
+              <!-- Left: color dot + category icon -->
+              <div class="task-indicator">
+                <span class="color-dot" [style.background]="item.task.color"></span>
+                <span class="material-icons category-icon sm" [style.color]="item.task.color">
+                  {{ CATEGORY_ICONS[item.task.category] }}
+                </span>
+              </div>
+
+              <!-- Center: info -->
+              <div class="task-info">
+                <div class="task-name-row">
+                  <span class="task-name">{{ item.task.name }}</span>
+                  @if (hasNudge(item.task.id)) {
+                    <span class="nudge-badge" title="Missed 3+ times in a row">🔥</span>
+                  }
+                </div>
+                <div class="task-meta">
+                  <span class="meta-item">
+                    <span class="material-icons xs">schedule</span>
+                    {{ formatTime(item.task.startTime) }}
+                  </span>
+                  <span class="meta-item">
+                    <span class="material-icons xs">timer</span>
+                    {{ formatDuration(item.task.duration) }}
+                  </span>
+                </div>
+                <span
+                  class="badge category-badge"
+                  [style.background]="item.task.color + '22'"
+                  [style.color]="item.task.color">
+                  {{ CATEGORY_LABELS[item.task.category] }}
+                </span>
+              </div>
+
+              <!-- Right: status actions -->
+              <div class="task-actions">
+                <button
+                  class="action-btn done-btn"
+                  [class.active]="item.instance.status === 'done'"
+                  title="Mark as Done"
+                  (click)="updateStatus(item.instance.id, 'done')">
+                  <span class="material-icons sm">check_circle</span>
+                </button>
+                <button
+                  class="action-btn missed-btn"
+                  [class.active]="item.instance.status === 'missed'"
+                  title="Mark as Missed"
+                  (click)="updateStatus(item.instance.id, 'missed')">
+                  <span class="material-icons sm">cancel</span>
+                </button>
+                <button
+                  class="action-btn skip-btn"
+                  [class.active]="item.instance.status === 'not-required'"
+                  title="Not Required"
+                  (click)="updateStatus(item.instance.id, 'not-required')">
+                  <span class="material-icons sm">do_not_disturb</span>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Afternoon -->
+    @if (afternoonTasks().length > 0) {
+      <section class="time-group animate-fade-in-up">
+        <div class="group-header">
+          <span class="material-icons group-icon afternoon-icon">wb_sunny</span>
+          <h2 class="group-title">Afternoon</h2>
+          <span class="group-count">{{ afternoonTasks().length }}</span>
+        </div>
+        <div class="task-cards">
+          @for (item of afternoonTasks(); track item.instance.id) {
+            <div
+              class="task-card glass-card"
+              [class.status-done]="item.instance.status === 'done'"
+              [class.status-missed]="item.instance.status === 'missed'"
+              [class.status-not-required]="item.instance.status === 'not-required'"
+              [style.--task-color]="item.task.color">
+
+              <div class="task-indicator">
+                <span class="color-dot" [style.background]="item.task.color"></span>
+                <span class="material-icons category-icon sm" [style.color]="item.task.color">
+                  {{ CATEGORY_ICONS[item.task.category] }}
+                </span>
+              </div>
+
+              <div class="task-info">
+                <div class="task-name-row">
+                  <span class="task-name">{{ item.task.name }}</span>
+                  @if (hasNudge(item.task.id)) {
+                    <span class="nudge-badge" title="Missed 3+ times in a row">🔥</span>
+                  }
+                </div>
+                <div class="task-meta">
+                  <span class="meta-item">
+                    <span class="material-icons xs">schedule</span>
+                    {{ formatTime(item.task.startTime) }}
+                  </span>
+                  <span class="meta-item">
+                    <span class="material-icons xs">timer</span>
+                    {{ formatDuration(item.task.duration) }}
+                  </span>
+                </div>
+                <span
+                  class="badge category-badge"
+                  [style.background]="item.task.color + '22'"
+                  [style.color]="item.task.color">
+                  {{ CATEGORY_LABELS[item.task.category] }}
+                </span>
+              </div>
+
+              <div class="task-actions">
+                <button
+                  class="action-btn done-btn"
+                  [class.active]="item.instance.status === 'done'"
+                  title="Mark as Done"
+                  (click)="updateStatus(item.instance.id, 'done')">
+                  <span class="material-icons sm">check_circle</span>
+                </button>
+                <button
+                  class="action-btn missed-btn"
+                  [class.active]="item.instance.status === 'missed'"
+                  title="Mark as Missed"
+                  (click)="updateStatus(item.instance.id, 'missed')">
+                  <span class="material-icons sm">cancel</span>
+                </button>
+                <button
+                  class="action-btn skip-btn"
+                  [class.active]="item.instance.status === 'not-required'"
+                  title="Not Required"
+                  (click)="updateStatus(item.instance.id, 'not-required')">
+                  <span class="material-icons sm">do_not_disturb</span>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Evening -->
+    @if (eveningTasks().length > 0) {
+      <section class="time-group animate-fade-in-up">
+        <div class="group-header">
+          <span class="material-icons group-icon evening-icon">nightlight</span>
+          <h2 class="group-title">Evening</h2>
+          <span class="group-count">{{ eveningTasks().length }}</span>
+        </div>
+        <div class="task-cards">
+          @for (item of eveningTasks(); track item.instance.id) {
+            <div
+              class="task-card glass-card"
+              [class.status-done]="item.instance.status === 'done'"
+              [class.status-missed]="item.instance.status === 'missed'"
+              [class.status-not-required]="item.instance.status === 'not-required'"
+              [style.--task-color]="item.task.color">
+
+              <div class="task-indicator">
+                <span class="color-dot" [style.background]="item.task.color"></span>
+                <span class="material-icons category-icon sm" [style.color]="item.task.color">
+                  {{ CATEGORY_ICONS[item.task.category] }}
+                </span>
+              </div>
+
+              <div class="task-info">
+                <div class="task-name-row">
+                  <span class="task-name">{{ item.task.name }}</span>
+                  @if (hasNudge(item.task.id)) {
+                    <span class="nudge-badge" title="Missed 3+ times in a row">🔥</span>
+                  }
+                </div>
+                <div class="task-meta">
+                  <span class="meta-item">
+                    <span class="material-icons xs">schedule</span>
+                    {{ formatTime(item.task.startTime) }}
+                  </span>
+                  <span class="meta-item">
+                    <span class="material-icons xs">timer</span>
+                    {{ formatDuration(item.task.duration) }}
+                  </span>
+                </div>
+                <span
+                  class="badge category-badge"
+                  [style.background]="item.task.color + '22'"
+                  [style.color]="item.task.color">
+                  {{ CATEGORY_LABELS[item.task.category] }}
+                </span>
+              </div>
+
+              <div class="task-actions">
+                <button
+                  class="action-btn done-btn"
+                  [class.active]="item.instance.status === 'done'"
+                  title="Mark as Done"
+                  (click)="updateStatus(item.instance.id, 'done')">
+                  <span class="material-icons sm">check_circle</span>
+                </button>
+                <button
+                  class="action-btn missed-btn"
+                  [class.active]="item.instance.status === 'missed'"
+                  title="Mark as Missed"
+                  (click)="updateStatus(item.instance.id, 'missed')">
+                  <span class="material-icons sm">cancel</span>
+                </button>
+                <button
+                  class="action-btn skip-btn"
+                  [class.active]="item.instance.status === 'not-required'"
+                  title="Not Required"
+                  (click)="updateStatus(item.instance.id, 'not-required')">
+                  <span class="material-icons sm">do_not_disturb</span>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+  } @else {
+
+    <!-- ═══ Empty State ═══ -->
+    <div class="empty-state animate-fade-in-up">
+      <span class="material-icons xl empty-icon">event_available</span>
+      <h3 class="empty-title">No tasks here!</h3>
+      <p class="empty-text">
+        @switch (activeFilter()) {
+          @case ('today') {
+            You have no tasks scheduled for today. Enjoy your free time! 🎉
+          }
+          @case ('week') {
+            No tasks scheduled this week. Time to plan ahead!
+          }
+          @case ('all') {
+            Your task list is empty. Add some routines to get started!
+          }
+        }
+      </p>
+    </div>
+
+  }
+
+</div>

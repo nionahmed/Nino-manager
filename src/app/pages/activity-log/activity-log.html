@@ -1,0 +1,228 @@
+<div class="activity-log page-enter">
+
+  <!-- ===== SUMMARY STATS ===== -->
+  <section class="summary-stats">
+    <div class="stat-card stat-card--unproductive">
+      <div class="stat-card__icon">
+        <span class="material-icons">block</span>
+      </div>
+      <div class="stat-card__content">
+        <span class="stat-card__label">Unproductive Today</span>
+        <span class="stat-card__value">{{ formatDuration(todayStats().unproductive) }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-card--entertainment">
+      <div class="stat-card__icon">
+        <span class="material-icons">sports_esports</span>
+      </div>
+      <div class="stat-card__content">
+        <span class="stat-card__label">Entertainment Today</span>
+        <span class="stat-card__value">{{ formatDuration(todayStats().entertainment) }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-card--week-unprod">
+      <div class="stat-card__icon">
+        <span class="material-icons">date_range</span>
+      </div>
+      <div class="stat-card__content">
+        <span class="stat-card__label">Unproductive This Week</span>
+        <span class="stat-card__value">{{ formatDuration(weekStats().unproductive) }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-card--week-ent">
+      <div class="stat-card__icon">
+        <span class="material-icons">date_range</span>
+      </div>
+      <div class="stat-card__content">
+        <span class="stat-card__label">Entertainment This Week</span>
+        <span class="stat-card__value">{{ formatDuration(weekStats().entertainment) }}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== QUICK-ADD PANEL ===== -->
+  <section class="quick-add glass-card">
+    <h2 class="quick-add__title">
+      <span class="material-icons">add_circle</span>
+      Log Activity
+    </h2>
+
+    <!-- Name input -->
+    <div class="quick-add__field">
+      <input
+        class="input"
+        type="text"
+        placeholder="What did you do?"
+        [ngModel]="name()"
+        (ngModelChange)="name.set($event)"
+        (keydown.enter)="addActivity()"
+      />
+    </div>
+
+    <!-- Category toggle -->
+    <div class="quick-add__field">
+      <label class="quick-add__label">Category</label>
+      <div class="category-toggle">
+        <button
+          class="pill-btn pill-btn--unproductive"
+          [class.active]="category() === 'unproductive'"
+          (click)="selectCategory('unproductive')"
+        >
+          <span class="material-icons sm">block</span>
+          Unproductive
+        </button>
+        <button
+          class="pill-btn pill-btn--entertainment"
+          [class.active]="category() === 'entertainment'"
+          (click)="selectCategory('entertainment')"
+        >
+          <span class="material-icons sm">sports_esports</span>
+          Entertainment
+        </button>
+      </div>
+    </div>
+
+    <!-- Duration presets + custom -->
+    <div class="quick-add__field">
+      <label class="quick-add__label">Duration</label>
+      <div class="duration-chips">
+        @for (preset of presets; track preset.value) {
+          <button
+            class="chip"
+            [class.active]="!useCustomDuration() && selectedPreset() === preset.value"
+            (click)="selectPreset(preset.value)"
+          >
+            {{ preset.label }}
+          </button>
+        }
+        <button
+          class="chip chip--custom"
+          [class.active]="useCustomDuration()"
+          (click)="enableCustomDuration()"
+        >
+          <span class="material-icons xs">edit</span>
+          Custom
+        </button>
+      </div>
+      @if (useCustomDuration()) {
+        <div class="custom-duration-input">
+          <input
+            class="input"
+            type="number"
+            min="1"
+            max="720"
+            placeholder="Minutes"
+            [ngModel]="customDuration()"
+            (ngModelChange)="onCustomDurationChange($event)"
+          />
+          <span class="custom-duration-input__suffix">min</span>
+        </div>
+      }
+    </div>
+
+    <!-- Timestamp -->
+    <div class="quick-add__field">
+      <label class="quick-add__label">Time</label>
+      <div class="timestamp-row">
+        <button class="timestamp-display" (click)="toggleTimePicker()">
+          <span class="material-icons sm">schedule</span>
+          {{ timestampDisplay() }}
+          <span class="material-icons xs">expand_more</span>
+        </button>
+      </div>
+      @if (showTimePicker()) {
+        <input
+          class="input timestamp-input"
+          type="datetime-local"
+          [ngModel]="timestamp()"
+          (ngModelChange)="onTimestampChange($event)"
+        />
+      }
+    </div>
+
+    <!-- Add button -->
+    <button
+      class="add-btn"
+      [class.disabled]="!canAdd()"
+      [disabled]="!canAdd()"
+      (click)="addActivity()"
+    >
+      <span class="material-icons">add</span>
+      Add Activity
+    </button>
+  </section>
+
+  <!-- ===== HISTORY LIST ===== -->
+  <section class="history">
+    <h2 class="history__title">
+      <span class="material-icons">history</span>
+      History
+    </h2>
+
+    @if (!hasActivities()) {
+      <div class="empty-state">
+        <span class="material-icons xl">inbox</span>
+        <p class="empty-state__text">No activities logged yet</p>
+        <p class="empty-state__subtext">Use the form above to start tracking</p>
+      </div>
+    }
+
+    @for (group of groupedHistory(); track group.date) {
+      <div class="date-group">
+        <div class="date-group__header">
+          <h3 class="date-group__label">{{ group.label }}</h3>
+          <div class="date-group__totals">
+            @if (group.unproductiveMin > 0) {
+              <span class="total-badge total-badge--unproductive">
+                {{ formatDuration(group.unproductiveMin) }} unproductive
+              </span>
+            }
+            @if (group.entertainmentMin > 0) {
+              <span class="total-badge total-badge--entertainment">
+                {{ formatDuration(group.entertainmentMin) }} entertainment
+              </span>
+            }
+          </div>
+        </div>
+
+        <div class="date-group__entries">
+          @for (entry of group.entries; track entry.id) {
+            <div class="entry" [class.entry--unproductive]="entry.category === 'unproductive'" [class.entry--entertainment]="entry.category === 'entertainment'">
+              <div class="entry__badge">
+                <span class="material-icons sm">
+                  {{ entry.category === 'unproductive' ? 'block' : 'sports_esports' }}
+                </span>
+              </div>
+              <div class="entry__info">
+                <span class="entry__name">{{ entry.name }}</span>
+                <span class="entry__meta">
+                  {{ formatDuration(entry.duration) }} · {{ formatTime(entry.timestamp) }}
+                </span>
+              </div>
+              <div class="entry__actions">
+                @if (confirmDeleteId() === entry.id) {
+                  <div class="confirm-delete">
+                    <button class="btn-confirm-yes" (click)="confirmDelete(entry.id)">
+                      <span class="material-icons sm">check</span>
+                    </button>
+                    <button class="btn-confirm-no" (click)="cancelDelete()">
+                      <span class="material-icons sm">close</span>
+                    </button>
+                  </div>
+                } @else {
+                  <button class="btn-delete" (click)="requestDelete(entry.id)">
+                    <span class="material-icons sm">delete_outline</span>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+</div>

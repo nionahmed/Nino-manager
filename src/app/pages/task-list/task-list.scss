@@ -1,0 +1,438 @@
+@use '../../styles/variables' as *;
+
+// ============================================
+// PAGE LAYOUT
+// ============================================
+.task-list-page {
+  padding: $space-md;
+  padding-bottom: $space-xxxl;
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: $space-lg;
+
+  @include tablet-up {
+    padding: $space-xl $space-lg;
+  }
+}
+
+// ============================================
+// HEADER
+// ============================================
+.page-header {
+  .page-title {
+    font-size: $font-xl;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .page-subtitle {
+    font-size: $font-sm;
+    color: var(--color-text-secondary);
+    margin-top: $space-xxs;
+  }
+}
+
+// ============================================
+// FILTER TABS
+// ============================================
+.filter-tabs {
+  flex-shrink: 0;
+}
+
+// ============================================
+// PROGRESS SECTION
+// ============================================
+.progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+
+  .progress-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .progress-text {
+    display: flex;
+    align-items: center;
+    gap: $space-xs;
+    font-size: $font-sm;
+    color: var(--color-text-secondary);
+
+    .material-icons {
+      font-size: 16px;
+      color: var(--color-success);
+    }
+  }
+
+  .progress-pct {
+    font-size: $font-sm;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+}
+
+// ============================================
+// TIME GROUP
+// ============================================
+.time-group {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+}
+
+.group-icon {
+  font-size: 22px;
+  padding: $space-xs;
+  border-radius: $radius-sm;
+
+  &.morning-icon {
+    color: #fdcb6e;
+    background: rgba(253, 203, 110, 0.12);
+  }
+
+  &.afternoon-icon {
+    color: #e17055;
+    background: rgba(225, 112, 85, 0.12);
+  }
+
+  &.evening-icon {
+    color: #a29bfe;
+    background: rgba(162, 155, 254, 0.12);
+  }
+}
+
+.group-title {
+  font-size: $font-md;
+  font-weight: 600;
+  flex: 1;
+}
+
+.group-count {
+  font-size: $font-xs;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  background: var(--color-card);
+  padding: 2px $space-sm;
+  border-radius: $radius-full;
+  border: 1px solid var(--color-border);
+}
+
+// ============================================
+// TASK CARDS CONTAINER
+// ============================================
+.task-cards {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+}
+
+// ============================================
+// TASK CARD
+// ============================================
+.task-card {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  padding: $space-md;
+  border-radius: $radius-md;
+  border-left: 3px solid transparent;
+  transition:
+    background $transition-fast,
+    border-color $transition-fast,
+    box-shadow $transition-fast,
+    opacity $transition-base,
+    transform $transition-fast;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: $shadow-md;
+  }
+
+  // ── Status variants ──
+  &.status-done {
+    border-left-color: var(--color-success);
+    background: rgba(0, 184, 148, 0.04);
+
+    .task-name {
+      text-decoration: line-through;
+      color: var(--color-text-secondary);
+    }
+  }
+
+  &.status-missed {
+    border-left-color: var(--color-danger);
+    background: rgba(225, 112, 85, 0.04);
+  }
+
+  &.status-not-required {
+    border-left-color: var(--color-text-tertiary);
+    opacity: 0.5;
+
+    .task-name {
+      color: var(--color-text-tertiary);
+    }
+  }
+}
+
+// ── Indicator (left side) ──
+.task-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-xs;
+  flex-shrink: 0;
+}
+
+.color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: $radius-full;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px var(--task-color, rgba(108, 92, 231, 0.4));
+}
+
+.category-icon {
+  opacity: 0.8;
+}
+
+// ── Info (center) ──
+.task-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+}
+
+.task-name-row {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+}
+
+.task-name {
+  font-weight: 600;
+  font-size: $font-base;
+  color: var(--color-text);
+  @include truncate;
+  transition: color $transition-fast, text-decoration $transition-fast;
+}
+
+.nudge-badge {
+  font-size: 14px;
+  line-height: 1;
+  animation: flame 1.5s ease-in-out infinite;
+  cursor: help;
+  flex-shrink: 0;
+}
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: $font-sm;
+  color: var(--color-text-secondary);
+
+  .material-icons {
+    font-size: 14px;
+    opacity: 0.6;
+  }
+}
+
+.category-badge {
+  align-self: flex-start;
+  font-size: $font-xs !important;
+  letter-spacing: 0.3px;
+}
+
+// ── Actions (right side) ──
+.task-actions {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xxs;
+  flex-shrink: 0;
+
+  @include tablet-up {
+    flex-direction: row;
+    gap: $space-xs;
+  }
+}
+
+.action-btn {
+  @include touch-target(36px);
+  border-radius: $radius-sm;
+  transition: all $transition-fast;
+  position: relative;
+  overflow: hidden;
+
+  .material-icons {
+    font-size: 18px;
+    transition: transform $transition-fast;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity $transition-fast;
+  }
+
+  &:active {
+    transform: scale(0.88);
+  }
+
+  // Done
+  &.done-btn {
+    color: var(--color-text-tertiary);
+
+    &:hover {
+      color: var(--color-success);
+      background: rgba(0, 184, 148, 0.1);
+    }
+
+    &.active {
+      color: #fff;
+      background: var(--color-success);
+      box-shadow: 0 0 12px rgba(0, 184, 148, 0.35);
+
+      .material-icons {
+        transform: scale(1.15);
+      }
+    }
+  }
+
+  // Missed
+  &.missed-btn {
+    color: var(--color-text-tertiary);
+
+    &:hover {
+      color: var(--color-danger);
+      background: rgba(225, 112, 85, 0.1);
+    }
+
+    &.active {
+      color: #fff;
+      background: var(--color-danger);
+      box-shadow: 0 0 12px rgba(225, 112, 85, 0.35);
+
+      .material-icons {
+        transform: scale(1.15);
+      }
+    }
+  }
+
+  // Skip / Not Required
+  &.skip-btn {
+    color: var(--color-text-tertiary);
+
+    &:hover {
+      color: var(--color-text-secondary);
+      background: var(--color-card);
+    }
+
+    &.active {
+      color: #fff;
+      background: var(--color-text-tertiary);
+
+      .material-icons {
+        transform: scale(1.15);
+      }
+    }
+  }
+}
+
+// ============================================
+// EMPTY STATE
+// ============================================
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: $space-xxl $space-lg;
+  gap: $space-md;
+
+  .empty-icon {
+    font-size: 64px;
+    color: var(--color-text-tertiary);
+    opacity: 0.4;
+  }
+
+  .empty-title {
+    font-size: $font-lg;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+
+  .empty-text {
+    font-size: $font-base;
+    color: var(--color-text-tertiary);
+    max-width: 320px;
+    line-height: 1.6;
+  }
+}
+
+// ============================================
+// STAGGER ANIMATION FOR CARDS
+// ============================================
+.task-card {
+  animation: fadeInUp 0.35s ease-out both;
+
+  @for $i from 1 through 20 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 40}ms;
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE TWEAKS
+// ============================================
+@include mobile {
+  .task-card {
+    gap: $space-sm;
+    padding: $space-sm $space-md;
+  }
+
+  .task-actions {
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .action-btn {
+    min-width: 32px;
+    min-height: 32px;
+
+    .material-icons {
+      font-size: 16px;
+    }
+  }
+
+  // Keep minimum 44px combined touch area
+  .task-actions {
+    min-width: 36px;
+  }
+}

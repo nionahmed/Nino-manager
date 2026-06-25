@@ -1,0 +1,32 @@
+<div class="daily-note">
+  @if (isEditing()) {
+    <div class="note-edit">
+      <input
+        class="note-input input"
+        type="text"
+        [ngModel]="noteText()"
+        (ngModelChange)="noteText.set($event)"
+        (keydown)="onKeydown($event)"
+        placeholder="How's your day? Write a quick note..."
+        autofocus
+      />
+      <div class="note-actions">
+        <button class="btn-primary btn-sm" (click)="saveNote()">
+          <span class="material-icons xs">check</span>
+        </button>
+        <button class="btn-ghost btn-sm" (click)="cancelEdit()">
+          <span class="material-icons xs">close</span>
+        </button>
+      </div>
+    </div>
+  } @else {
+    <button class="note-display" (click)="startEdit()">
+      <span class="material-icons sm note-icon">edit_note</span>
+      @if (currentNote) {
+        <span class="note-text">{{ currentNote }}</span>
+      } @else {
+        <span class="note-placeholder">Add a note for today...</span>
+      }
+    </button>
+  }
+</div>
