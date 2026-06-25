@@ -257,8 +257,8 @@
 // TIME ROW (Start + End side by side)
 // ============================================
 .time-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: $space-md;
   align-items: flex-end;
 }
@@ -267,11 +267,10 @@
   display: flex;
   flex-direction: column;
   gap: $space-sm;
-  flex: 1;
-  min-width: 140px;
 }
 
 .duration-computed {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   gap: $space-xs;
@@ -283,6 +282,7 @@
   font-weight: 700;
   white-space: nowrap;
   margin-bottom: 2px;
+  justify-content: center;
 
   .material-icons {
     font-size: 14px;
