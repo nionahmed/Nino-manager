@@ -56,46 +56,49 @@
       </div>
     </div>
 
-    <!-- Start Time -->
+    <!-- Start Date -->
     <div class="field">
       <label class="field-label">
-        <span class="material-icons sm">schedule</span>
-        Start Time
+        <span class="material-icons sm">calendar_today</span>
+        Start Date
       </label>
       <input
-        type="time"
-        class="input time-input"
-        [ngModel]="startTime()"
-        (ngModelChange)="startTime.set($event)"
+        type="date"
+        class="input date-input"
+        [ngModel]="startDate()"
+        (ngModelChange)="startDate.set($event)"
       />
     </div>
 
-    <!-- Duration -->
-    <div class="field">
-      <label class="field-label">
-        <span class="material-icons sm">timelapse</span>
-        Duration
-        <span class="duration-badge">{{ durationDisplay() }}</span>
-      </label>
-      <input
-        type="range"
-        class="duration-slider"
-        min="5"
-        max="240"
-        step="5"
-        [ngModel]="duration()"
-        (input)="onDurationSlider($event)"
-      />
-      <div class="duration-presets">
-        @for (preset of durationPresets; track preset.value) {
-          <button
-            class="preset-chip"
-            [class.active]="duration() === preset.value"
-            (click)="setDuration(preset.value)"
-          >
-            {{ preset.label }}
-          </button>
-        }
+    <!-- Start Time & End Time in a row -->
+    <div class="field time-row">
+      <div class="time-field">
+        <label class="field-label">
+          <span class="material-icons sm">schedule</span>
+          Start Time
+        </label>
+        <input
+          type="time"
+          class="input time-input"
+          [ngModel]="startTime()"
+          (ngModelChange)="startTime.set($event)"
+        />
+      </div>
+      <div class="time-field">
+        <label class="field-label">
+          <span class="material-icons sm">schedule</span>
+          End Time
+        </label>
+        <input
+          type="time"
+          class="input time-input"
+          [ngModel]="endTime()"
+          (ngModelChange)="endTime.set($event)"
+        />
+      </div>
+      <div class="duration-computed">
+        <span class="material-icons xs">timelapse</span>
+        {{ durationDisplay() }}
       </div>
     </div>
 

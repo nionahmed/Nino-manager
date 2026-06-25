@@ -101,7 +101,9 @@ export class StorageService {
     const all = [...this.tasks(), newTask];
     this.tasks.set(all);
     this.set(this.KEYS.tasks, all);
-    this.generateInstancesForDateRange(this.today(), this.today());
+    // Generate instance for the task's start date and today
+    const genStart = newTask.startDate <= this.today() ? this.today() : newTask.startDate;
+    this.generateInstancesForDateRange(genStart, genStart);
     return newTask;
   }
 
@@ -130,19 +132,24 @@ export class StorageService {
   // ============================
   taskShouldOccurOnDate(task: Task, dateStr: string): boolean {
     if (task.archived) return false;
+    // Use startDate if available, otherwise fall back to createdAt date
+    const taskStartDate = task.startDate || this.formatDate(new Date(task.createdAt));
+    // Don't generate instances before the task's start date
+    if (dateStr < taskStartDate) return false;
     const dayOfWeek = this.getDayOfWeek(dateStr);
     switch (task.repeat) {
       case 'daily':
         return true;
-      case 'weekly':
-        // Created day of week
-        const createdDay = new Date(task.createdAt).getDay();
-        return dayOfWeek === createdDay;
+      case 'weekly': {
+        // Use the day of week from the start date
+        const startDow = this.getDayOfWeek(taskStartDate);
+        return dayOfWeek === startDow;
+      }
       case 'custom':
         return task.customDays?.includes(dayOfWeek) ?? false;
       case 'none':
-        // One-time task: occurs on the date it was created
-        return this.formatDate(new Date(task.createdAt)) === dateStr;
+        // One-time task: occurs on its start date
+        return dateStr === taskStartDate;
       default:
         return false;
     }

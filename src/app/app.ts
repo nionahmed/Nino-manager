@@ -1,13 +1,14 @@
 import { Component, signal, computed, inject, OnInit, PLATFORM_ID } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { AuthService } from './services/auth.service';
+import { TaskEditorService } from './services/task-editor.service';
 import { filter } from 'rxjs';
 import { TaskEditorComponent } from './components/task-editor/task-editor';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, TaskEditorComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TaskEditorComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -15,12 +16,12 @@ export class App implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
+  readonly editorService = inject(TaskEditorService);
 
   protected readonly title = signal('Nino Manager');
   protected readonly isDark = signal(true);
   protected readonly showNav = computed(() => this.auth.isAuthenticated());
   protected readonly currentRoute = signal('');
-  protected readonly showTaskEditor = signal(false);
 
   readonly navItems = [
     { path: '/calendar', icon: 'calendar_today', label: 'Calendar' },
@@ -74,11 +75,11 @@ export class App implements OnInit {
   }
 
   openTaskEditor(): void {
-    this.showTaskEditor.set(true);
+    this.editorService.openNew();
   }
 
   closeTaskEditor(): void {
-    this.showTaskEditor.set(false);
+    this.editorService.close();
   }
 
   logout(): void {

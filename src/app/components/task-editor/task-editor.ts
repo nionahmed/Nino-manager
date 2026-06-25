@@ -11,6 +11,7 @@ import {
   CATEGORY_LABELS,
   CATEGORY_COLORS,
   CATEGORY_ICONS,
+  calcDuration,
 } from '../../models/task.model';
 
 @Component({
@@ -32,7 +33,8 @@ export class TaskEditorComponent implements OnInit {
   readonly name = signal('');
   readonly category = signal<TaskCategory>('work');
   readonly startTime = signal('09:00');
-  readonly duration = signal(30);
+  readonly endTime = signal('10:00');
+  readonly startDate = signal(this.storage.today());
   readonly repeat = signal<RepeatType>('none');
   readonly customDays = signal<number[]>([]);
   readonly color = signal(DEFAULT_TASK_COLORS[0]);
@@ -41,7 +43,7 @@ export class TaskEditorComponent implements OnInit {
   readonly showDeleteConfirm = signal(false);
 
   // Constants exposed to template
-  readonly categories: TaskCategory[] = ['work', 'exercise', 'personal', 'entertainment', 'study', 'other'];
+  readonly categories: TaskCategory[] = ['work', 'exercise', 'personal', 'entertainment', 'study', 'prayer', 'other'];
   readonly categoryLabels = CATEGORY_LABELS;
   readonly categoryColors = CATEGORY_COLORS;
   readonly categoryIcons = CATEGORY_ICONS;
@@ -61,19 +63,12 @@ export class TaskEditorComponent implements OnInit {
     { value: 5, short: 'F', label: 'Fri' },
     { value: 6, short: 'S', label: 'Sat' },
   ];
-  readonly durationPresets = [
-    { label: '15m', value: 15 },
-    { label: '30m', value: 30 },
-    { label: '45m', value: 45 },
-    { label: '1h', value: 60 },
-    { label: '1.5h', value: 90 },
-    { label: '2h', value: 120 },
-  ];
 
   // Computed
   readonly isEditing = computed(() => !!this.taskId());
+  readonly computedDuration = computed(() => calcDuration(this.startTime(), this.endTime()));
   readonly durationDisplay = computed(() => {
-    const d = this.duration();
+    const d = this.computedDuration();
     const hours = Math.floor(d / 60);
     const mins = d % 60;
     if (hours === 0) return `${mins} min`;
@@ -91,7 +86,8 @@ export class TaskEditorComponent implements OnInit {
         this.name.set(task.name);
         this.category.set(task.category);
         this.startTime.set(task.startTime);
-        this.duration.set(task.duration);
+        this.endTime.set(task.endTime || this.calcEndFromDuration(task.startTime, task.duration));
+        this.startDate.set(task.startDate || this.storage.today());
         this.repeat.set(task.repeat);
         this.customDays.set(task.customDays ?? []);
         this.color.set(task.color);
@@ -103,19 +99,18 @@ export class TaskEditorComponent implements OnInit {
     }
   }
 
+  /** Fallback: compute endTime from startTime + duration for legacy tasks */
+  private calcEndFromDuration(start: string, durationMins: number): string {
+    const [h, m] = start.split(':').map(Number);
+    const totalMin = h * 60 + m + durationMins;
+    const endH = Math.floor(totalMin / 60) % 24;
+    const endM = totalMin % 60;
+    return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+  }
+
   // Category
   selectCategory(cat: TaskCategory): void {
     this.category.set(cat);
-  }
-
-  // Duration
-  setDuration(val: number): void {
-    this.duration.set(val);
-  }
-
-  onDurationSlider(event: Event): void {
-    const value = +(event.target as HTMLInputElement).value;
-    this.duration.set(value);
   }
 
   // Repeat
@@ -154,11 +149,15 @@ export class TaskEditorComponent implements OnInit {
   save(): void {
     if (!this.isValid()) return;
 
+    const duration = this.computedDuration();
+
     const taskData = {
       name: this.name().trim(),
       category: this.category(),
       startTime: this.startTime(),
-      duration: this.duration(),
+      endTime: this.endTime(),
+      duration,
+      startDate: this.startDate(),
       repeat: this.repeat(),
       customDays: this.repeat() === 'custom' ? this.customDays() : undefined,
       color: this.color(),
@@ -180,11 +179,15 @@ export class TaskEditorComponent implements OnInit {
   duplicate(): void {
     if (!this.isValid()) return;
 
+    const duration = this.computedDuration();
+
     const taskData: Omit<Task, 'id' | 'createdAt'> = {
       name: this.name().trim() + ' (copy)',
       category: this.category(),
       startTime: this.startTime(),
-      duration: this.duration(),
+      endTime: this.endTime(),
+      duration,
+      startDate: this.startDate(),
       repeat: this.repeat(),
       customDays: this.repeat() === 'custom' ? this.customDays() : undefined,
       color: this.color(),

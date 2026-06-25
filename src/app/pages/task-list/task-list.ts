@@ -9,8 +9,9 @@ import {
   CATEGORY_ICONS,
   CATEGORY_LABELS,
 } from '../../models/task.model';
+import { TaskEditorService } from '../../services/task-editor.service';
 
-type FilterTab = 'today' | 'week' | 'all';
+type FilterTab = 'today' | 'week';
 
 interface EnrichedInstance {
   instance: TaskInstance;
@@ -27,6 +28,8 @@ interface EnrichedInstance {
 export class TaskListComponent {
   private readonly storage = inject(StorageService);
   private readonly nudge = inject(NudgeService);
+
+  private readonly editorService = inject(TaskEditorService);
 
   readonly activeFilter = signal<FilterTab>('today');
 
@@ -55,11 +58,9 @@ export class TaskListComponent {
 
     if (filter === 'today') {
       return this.storage.getInstancesForDate(this.storage.today());
-    } else if (filter === 'week') {
+    } else {
       this.storage.generateInstancesForDateRange(this.weekStart(), this.weekEnd());
       return this.storage.getInstancesForDateRange(this.weekStart(), this.weekEnd());
-    } else {
-      return _all;
     }
   });
 
@@ -120,6 +121,10 @@ export class TaskListComponent {
     return this.nudge.hasNudge(taskId);
   }
 
+  onEditTask(taskId: string): void {
+    this.editorService.openEdit(taskId);
+  }
+
   formatTime(time24: string): string {
     const [hStr, mStr] = time24.split(':');
     let h = parseInt(hStr, 10);
@@ -142,8 +147,6 @@ export class TaskListComponent {
         return 'Today';
       case 'week':
         return 'This Week';
-      case 'all':
-        return 'All Tasks';
     }
   }
 }

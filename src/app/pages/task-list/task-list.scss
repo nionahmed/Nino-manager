@@ -361,6 +361,16 @@
       }
     }
   }
+
+  // Edit
+  &.edit-btn {
+    color: var(--color-text-tertiary);
+
+    &:hover {
+      color: var(--color-primary);
+      background: var(--color-primary-bg);
+    }
+  }
 }
 
 // ============================================

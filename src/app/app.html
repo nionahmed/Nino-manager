@@ -44,9 +44,9 @@
 </main>
 
 <!-- Task Editor Modal -->
-@if (showTaskEditor()) {
-  <div class="overlay" (click)="closeTaskEditor()"></div>
+@if (editorService.isOpen()) {
   <app-task-editor
+    [taskId]="editorService.editingTaskId()"
     (close)="closeTaskEditor()"
     (saved)="closeTaskEditor()" />
 }
