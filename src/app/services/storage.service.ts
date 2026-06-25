@@ -111,6 +111,20 @@ export class StorageService {
     const all = this.tasks().map((t) => (t.id === id ? { ...t, ...updates } : t));
     this.tasks.set(all);
     this.set(this.KEYS.tasks, all);
+
+    // Clean up any pending instances that are no longer valid (e.g. if start date moved to future)
+    const task = this.getTask(id);
+    if (task) {
+      const validInstances = this.instances().filter(i => {
+        if (i.taskId !== id) return true;
+        if (i.status !== 'pending') return true; // keep history
+        return this.taskShouldOccurOnDate(task, i.date);
+      });
+      if (validInstances.length !== this.instances().length) {
+        this.instances.set(validInstances);
+        this.set(this.KEYS.instances, validInstances);
+      }
+    }
   }
 
   deleteTask(id: string): void {
@@ -153,6 +167,47 @@ export class StorageService {
       default:
         return false;
     }
+  }
+
+  getNextOccurrence(task: Task): string | null {
+    if (task.archived) return null;
+    let d = new Date();
+    const todayStr = this.formatDate(d);
+    
+    // Ensure we have a valid start date to compare
+    const taskStartDate = task.startDate || this.formatDate(new Date(task.createdAt));
+    let checkDateStr = todayStr > taskStartDate ? todayStr : taskStartDate;
+    
+    for (let i = 0; i < 365; i++) {
+      if (this.taskShouldOccurOnDate(task, checkDateStr)) {
+        // Check if this instance is already done/missed/not-required
+        const inst = this.instances().find(inst => inst.taskId === task.id && inst.date === checkDateStr);
+        // If it doesn't exist, or it is pending, this is the next occurrence
+        if (!inst || inst.status === 'pending') {
+          return checkDateStr;
+        }
+      }
+      d = new Date(checkDateStr + 'T00:00:00');
+      d.setDate(d.getDate() + 1);
+      checkDateStr = this.formatDate(d);
+    }
+    return null;
+  }
+
+  getVirtualInstance(taskId: string, dateStr: string): TaskInstance | null {
+    const inst = this.instances().find(i => i.taskId === taskId && i.date === dateStr);
+    if (inst) return inst;
+
+    const task = this.getTask(taskId);
+    if (!task) return null;
+
+    // Return a virtual instance WITHOUT saving it to storage
+    return {
+      id: `virtual_${taskId}_${dateStr}`,
+      taskId,
+      date: dateStr,
+      status: 'pending'
+    };
   }
 
   generateInstancesForToday(): void {
@@ -201,6 +256,26 @@ export class StorageService {
   }
 
   updateInstanceStatus(instanceId: string, status: TaskStatus): void {
+    if (instanceId.startsWith('virtual_')) {
+      // instanceId format: virtual_taskId_dateStr
+      const parts = instanceId.split('_');
+      const taskId = parts[1];
+      const dateStr = parts.slice(2).join('_');
+      
+      const newInst: TaskInstance = {
+        id: this.generateId(),
+        taskId,
+        date: dateStr,
+        status,
+        completedAt: status === 'done' ? new Date().toISOString() : undefined,
+      };
+      
+      const all = [...this.instances(), newInst];
+      this.instances.set(all);
+      this.set(this.KEYS.instances, all);
+      return;
+    }
+
     const all = this.instances().map((i) =>
       i.id === instanceId
         ? {

@@ -322,8 +322,6 @@
 // Task blocks
 .task-block {
   position: absolute;
-  left: 2px;
-  right: 2px;
   border-radius: $radius-sm;
   background: var(--task-color, var(--color-primary));
   cursor: pointer;
@@ -363,14 +361,7 @@
     filter: grayscale(0.5);
   }
 
-  .view-3day & {
-    left: 1px;
-    right: 1px;
-  }
-
   .view-week & {
-    left: 1px;
-    right: 1px;
     border-radius: $radius-xs;
   }
 }

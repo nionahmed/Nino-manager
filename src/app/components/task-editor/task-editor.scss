@@ -188,17 +188,60 @@
 // ============================================
 // TIME INPUT & DATE INPUT
 // ============================================
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .input {
+    width: 100%;
+    padding-right: 40px; /* space for icon */
+  }
+
+  .picker-icon {
+    position: absolute;
+    right: 12px;
+    pointer-events: none; /* let clicks pass through to native icon */
+    color: var(--color-primary);
+    opacity: 0.8;
+  }
+
+  /* Make the native webkit icon span the whole input or sit invisibly under our custom icon */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    opacity: 0; /* hidden but clickable */
+    cursor: pointer;
+  }
+}
+
 .time-input,
 .date-input {
   font-size: $font-md;
   font-weight: 500;
   padding: $space-sm $space-md;
   border-radius: $radius-md;
-  max-width: 200px;
+  width: 100%;
   color-scheme: dark;
   background: var(--color-input-bg);
   border: 1px solid var(--color-border);
   transition: all $transition-fast;
+  text-align: left !important;
+  justify-content: flex-start;
+
+  &::-webkit-datetime-edit {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  &::-webkit-datetime-edit-fields-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    padding: 0;
+  }
 
   &:focus {
     border-color: var(--color-primary);
@@ -208,10 +251,6 @@
   [data-theme='light'] & {
     color-scheme: light;
   }
-}
-
-.date-input {
-  max-width: 100%;
 }
 
 // ============================================
@@ -229,7 +268,7 @@
   flex-direction: column;
   gap: $space-sm;
   flex: 1;
-  min-width: 130px;
+  min-width: 140px;
 }
 
 .duration-computed {

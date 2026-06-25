@@ -86,6 +86,8 @@
                        [class.status-missed]="pt.instance.status === 'missed'"
                        [style.top.px]="pt.top"
                        [style.height.px]="pt.height"
+                       [style.left]="pt.leftPct != null ? 'calc(' + pt.leftPct + '% + 2px)' : '2px'"
+                       [style.width]="pt.widthPct != null ? 'calc(' + pt.widthPct + '% - 4px)' : 'calc(100% - 4px)'"
                        [style.--task-color]="pt.task.color"
                        (click)="cycleStatus(pt.instance, $event)">
                     <div class="task-block-inner">

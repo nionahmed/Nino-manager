@@ -86,6 +86,13 @@ export const DEFAULT_TASK_COLORS = [
   '#74b9ff', '#e056a0',
 ];
 
+export const REPEAT_LABELS: Record<RepeatType, string> = {
+  none: 'One-time',
+  daily: 'Daily',
+  weekly: 'Weekly',
+  custom: 'Custom',
+};
+
 /** Calculate duration in minutes from HH:mm start and end times */
 export function calcDuration(startTime: string, endTime: string): number {
   const [sh, sm] = startTime.split(':').map(Number);
@@ -98,3 +105,4 @@ export function calcDuration(startTime: string, endTime: string): number {
   }
   return endMin - startMin;
 }
+

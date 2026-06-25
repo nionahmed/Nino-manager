@@ -18,6 +18,8 @@ interface PositionedTask {
   task: Task;
   top: number;
   height: number;
+  leftPct?: number;
+  widthPct?: number;
 }
 
 interface MonthDay {
@@ -147,6 +149,61 @@ export class CalendarComponent implements OnInit, OnDestroy {
         const height = Math.max((task.duration / 60) * hourHeight, hourHeight * 0.35);
 
         positioned.push({ instance: inst, task, top, height });
+      }
+
+      // Group overlapping tasks
+      positioned.sort((a, b) => a.top - b.top || b.height - a.height);
+
+      const clusters: PositionedTask[][] = [];
+      let currentCluster: PositionedTask[] = [];
+      let clusterEnd = 0;
+
+      for (const p of positioned) {
+        if (currentCluster.length === 0) {
+          currentCluster.push(p);
+          clusterEnd = p.top + p.height;
+        } else {
+          // If task overlaps with the current cluster
+          if (p.top < clusterEnd) {
+            currentCluster.push(p);
+            clusterEnd = Math.max(clusterEnd, p.top + p.height);
+          } else {
+            clusters.push(currentCluster);
+            currentCluster = [p];
+            clusterEnd = p.top + p.height;
+          }
+        }
+      }
+      if (currentCluster.length > 0) {
+        clusters.push(currentCluster);
+      }
+
+      // Assign left and width within clusters
+      for (const cluster of clusters) {
+        const columns: PositionedTask[][] = [];
+        
+        for (const p of cluster) {
+          let placed = false;
+          for (const col of columns) {
+            const last = col[col.length - 1];
+            if (last.top + last.height <= p.top) {
+              col.push(p);
+              placed = true;
+              break;
+            }
+          }
+          if (!placed) {
+            columns.push([p]);
+          }
+        }
+        
+        const numCols = columns.length;
+        for (let colIdx = 0; colIdx < numCols; colIdx++) {
+          for (const p of columns[colIdx]) {
+            p.leftPct = (colIdx / numCols) * 100;
+            p.widthPct = (1 / numCols) * 100;
+          }
+        }
       }
 
       return positioned;

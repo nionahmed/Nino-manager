@@ -62,12 +62,15 @@
         <span class="material-icons sm">calendar_today</span>
         Start Date
       </label>
-      <input
-        type="date"
-        class="input date-input"
-        [ngModel]="startDate()"
-        (ngModelChange)="startDate.set($event)"
-      />
+      <div class="input-with-icon">
+        <input
+          type="date"
+          class="input date-input"
+          [ngModel]="startDate()"
+          (ngModelChange)="startDate.set($event)"
+        />
+        <span class="material-icons picker-icon">event</span>
+      </div>
     </div>
 
     <!-- Start Time & End Time in a row -->
@@ -77,24 +80,30 @@
           <span class="material-icons sm">schedule</span>
           Start Time
         </label>
-        <input
-          type="time"
-          class="input time-input"
-          [ngModel]="startTime()"
-          (ngModelChange)="startTime.set($event)"
-        />
+        <div class="input-with-icon">
+          <input
+            type="time"
+            class="input time-input"
+            [ngModel]="startTime()"
+            (ngModelChange)="startTime.set($event)"
+          />
+          <span class="material-icons picker-icon">schedule</span>
+        </div>
       </div>
       <div class="time-field">
         <label class="field-label">
           <span class="material-icons sm">schedule</span>
           End Time
         </label>
-        <input
-          type="time"
-          class="input time-input"
-          [ngModel]="endTime()"
-          (ngModelChange)="endTime.set($event)"
-        />
+        <div class="input-with-icon">
+          <input
+            type="time"
+            class="input time-input"
+            [ngModel]="endTime()"
+            (ngModelChange)="endTime.set($event)"
+          />
+          <span class="material-icons picker-icon">schedule</span>
+        </div>
       </div>
       <div class="duration-computed">
         <span class="material-icons xs">timelapse</span>

@@ -259,10 +259,33 @@
   }
 }
 
-.category-badge {
-  align-self: flex-start;
+.task-badges {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  flex-wrap: wrap;
+}
+
+.category-badge,
+.repeat-badge {
   font-size: $font-xs !important;
   letter-spacing: 0.3px;
+}
+
+.repeat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: $radius-full;
+  padding: 2px 6px;
+
+  .material-icons {
+    font-size: 12px;
+    opacity: 0.7;
+  }
 }
 
 // ── Actions (right side) ──

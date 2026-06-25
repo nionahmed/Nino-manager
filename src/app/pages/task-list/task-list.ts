@@ -4,18 +4,22 @@ import { StorageService } from '../../services/storage.service';
 import { NudgeService } from '../../services/nudge.service';
 import {
   Task,
+  TaskCategory,
   TaskInstance,
   TaskStatus,
+  RepeatType,
   CATEGORY_ICONS,
   CATEGORY_LABELS,
+  REPEAT_LABELS,
 } from '../../models/task.model';
 import { TaskEditorService } from '../../services/task-editor.service';
 
-type FilterTab = 'today' | 'week';
+type FilterTab = 'today' | 'week' | 'all';
 
 interface EnrichedInstance {
   instance: TaskInstance;
   task: Task;
+  nextDate?: string;
 }
 
 @Component({
@@ -28,10 +32,14 @@ interface EnrichedInstance {
 export class TaskListComponent {
   private readonly storage = inject(StorageService);
   private readonly nudge = inject(NudgeService);
-
   private readonly editorService = inject(TaskEditorService);
 
   readonly activeFilter = signal<FilterTab>('today');
+
+  // ── Constants ──
+  readonly CATEGORY_ICONS = CATEGORY_ICONS;
+  readonly CATEGORY_LABELS = CATEGORY_LABELS;
+  readonly REPEAT_LABELS = REPEAT_LABELS;
 
   // ── Week range helpers ──
   private readonly weekStart = computed(() => {
@@ -50,47 +58,92 @@ export class TaskListComponent {
     return this.storage.formatDate(sunday);
   });
 
-  // ── Raw instances based on active filter ──
-  private readonly rawInstances = computed<TaskInstance[]>(() => {
-    const filter = this.activeFilter();
-    // Ensure we trigger reactivity on instances signal
-    const _all = this.storage.instances();
-
-    if (filter === 'today') {
-      return this.storage.getInstancesForDate(this.storage.today());
-    } else {
-      this.storage.generateInstancesForDateRange(this.weekStart(), this.weekEnd());
-      return this.storage.getInstancesForDateRange(this.weekStart(), this.weekEnd());
-    }
-  });
-
   // ── Enriched: join instances with their parent task ──
   private readonly enrichedInstances = computed<EnrichedInstance[]>(() => {
-    return this.rawInstances()
-      .map((inst) => {
-        const task = this.storage.getTask(inst.taskId);
-        return task ? { instance: inst, task } : null;
-      })
-      .filter((e): e is EnrichedInstance => e !== null)
-      .sort((a, b) => a.task.startTime.localeCompare(b.task.startTime));
+    const filter = this.activeFilter();
+    // Ensure we trigger reactivity on instances signal
+    this.storage.instances();
+
+    if (filter === 'today') {
+      const raw = this.storage.getInstancesForDate(this.storage.today());
+      return raw
+        .map((inst) => {
+          const task = this.storage.getTask(inst.taskId);
+          return task ? { instance: inst, task } : null;
+        })
+        .filter((e): e is EnrichedInstance => e !== null)
+        .sort((a, b) => a.task.startTime.localeCompare(b.task.startTime));
+    }
+
+    // For 'week' and 'all', show each task's next occurrence
+    const allTasks = this.storage.tasks();
+    const items: EnrichedInstance[] = [];
+    
+    for (const task of allTasks) {
+      if (task.archived) continue;
+      
+      const nextDate = this.storage.getNextOccurrence(task);
+      if (!nextDate) continue; // no future occurrences
+      
+      if (filter === 'week' && nextDate > this.weekEnd()) {
+        continue; // strictly after this week
+      }
+      
+      // Get or create the virtual instance for this next date
+      const instance = this.storage.getVirtualInstance(task.id, nextDate);
+      if (instance) {
+        items.push({ instance, task, nextDate });
+      }
+    }
+    
+    // Sort according to their date and then by earliest time
+    return items.sort((a, b) => {
+       const dateDiff = a.nextDate!.localeCompare(b.nextDate!);
+       if (dateDiff !== 0) return dateDiff;
+       return a.task.startTime.localeCompare(b.task.startTime);
+    });
   });
 
-  // ── Time-of-day groups ──
+  // ── Time-of-day groups (Only for Today) ──
   readonly morningTasks = computed(() =>
-    this.enrichedInstances().filter((e) => e.task.startTime < '12:00')
+    this.activeFilter() === 'today' ? this.enrichedInstances().filter((e) => e.task.startTime < '12:00') : []
   );
 
   readonly afternoonTasks = computed(() =>
-    this.enrichedInstances().filter(
+    this.activeFilter() === 'today' ? this.enrichedInstances().filter(
       (e) => e.task.startTime >= '12:00' && e.task.startTime < '17:00'
-    )
+    ) : []
   );
 
   readonly eveningTasks = computed(() =>
-    this.enrichedInstances().filter((e) => e.task.startTime >= '17:00')
+    this.activeFilter() === 'today' ? this.enrichedInstances().filter((e) => e.task.startTime >= '17:00') : []
   );
 
-  // ── Progress ──
+  // ── Date groups (For Week/All) ──
+  readonly dateGroups = computed(() => {
+    if (this.activeFilter() === 'today') return [];
+    
+    const groups: { date: string; label: string; tasks: EnrichedInstance[] }[] = [];
+    const map = new Map<string, EnrichedInstance[]>();
+    
+    for (const item of this.enrichedInstances()) {
+      const date = item.nextDate!;
+      if (!map.has(date)) map.set(date, []);
+      map.get(date)!.push(item);
+    }
+    
+    const sortedDates = Array.from(map.keys()).sort();
+    for (const d of sortedDates) {
+      groups.push({
+        date: d,
+        label: this.formatDateHeader(d),
+        tasks: map.get(d)!
+      });
+    }
+    return groups;
+  });
+
+  // ── Progress (only meaningful for today / week) ──
   readonly totalTasks = computed(() => this.enrichedInstances().length);
 
   readonly completedTasks = computed(
@@ -102,12 +155,11 @@ export class TaskListComponent {
     return total === 0 ? 0 : Math.round((this.completedTasks() / total) * 100);
   });
 
+  // ── Whether to show repeat badge (only for week/all views) ──
+  readonly showRepeatBadge = computed(() => this.activeFilter() !== 'today');
+
   // ── Empty state ──
   readonly isEmpty = computed(() => this.enrichedInstances().length === 0);
-
-  // ── Helpers ──
-  readonly CATEGORY_ICONS = CATEGORY_ICONS;
-  readonly CATEGORY_LABELS = CATEGORY_LABELS;
 
   setFilter(filter: FilterTab): void {
     this.activeFilter.set(filter);
@@ -141,12 +193,39 @@ export class TaskListComponent {
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
   }
 
+  getRepeatLabel(repeat: RepeatType | any): string {
+    return REPEAT_LABELS[repeat as RepeatType];
+  }
+
+  getCategoryIcon(category: TaskCategory | any): string {
+    return CATEGORY_ICONS[category as TaskCategory];
+  }
+
+  getCategoryLabel(category: TaskCategory | any): string {
+    return CATEGORY_LABELS[category as TaskCategory];
+  }
+
   getFilterLabel(): string {
     switch (this.activeFilter()) {
       case 'today':
         return 'Today';
       case 'week':
         return 'This Week';
+      case 'all':
+        return 'All Tasks';
     }
+  }
+
+  formatDateHeader(dateStr: string): string {
+    const today = this.storage.today();
+    if (dateStr === today) return 'Today';
+    
+    const tDate = new Date();
+    tDate.setDate(tDate.getDate() + 1);
+    if (dateStr === this.storage.formatDate(tDate)) return 'Tomorrow';
+    
+    // Ensure cross-browser date parsing by appending time
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
   }
 }
