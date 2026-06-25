@@ -3,7 +3,7 @@
     "rules": "firestore.rules"
   },
   "hosting": {
-    "public": "dist/Nino-manager/browser",
+    "public": "dist/Nino-manager",
     "ignore": [
       "firebase.json",
       "**/.*",
