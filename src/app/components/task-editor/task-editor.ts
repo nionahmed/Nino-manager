@@ -151,7 +151,7 @@ export class TaskEditorComponent implements OnInit {
 
     const duration = this.computedDuration();
 
-    const taskData = {
+    const taskData: any = {
       name: this.name().trim(),
       category: this.category(),
       startTime: this.startTime(),
@@ -159,9 +159,9 @@ export class TaskEditorComponent implements OnInit {
       duration,
       startDate: this.startDate(),
       repeat: this.repeat(),
-      customDays: this.repeat() === 'custom' ? this.customDays() : undefined,
+      customDays: this.repeat() === 'custom' ? this.customDays() : null,
       color: this.color(),
-      notes: this.notes().trim() || undefined,
+      notes: this.notes().trim() || null,
     };
 
     const id = this.taskId();
@@ -181,7 +181,7 @@ export class TaskEditorComponent implements OnInit {
 
     const duration = this.computedDuration();
 
-    const taskData: Omit<Task, 'id' | 'createdAt'> = {
+    const taskData: any = {
       name: this.name().trim() + ' (copy)',
       category: this.category(),
       startTime: this.startTime(),
@@ -189,9 +189,9 @@ export class TaskEditorComponent implements OnInit {
       duration,
       startDate: this.startDate(),
       repeat: this.repeat(),
-      customDays: this.repeat() === 'custom' ? this.customDays() : undefined,
+      customDays: this.repeat() === 'custom' ? this.customDays() : null,
       color: this.color(),
-      notes: this.notes().trim() || undefined,
+      notes: this.notes().trim() || null,
     };
 
     await this.storage.addTask(taskData);
