@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "dist/Nino-manager",
+    "public": "dist/Nino-manager/browser",
     "ignore": [
       "firebase.json",
       "**/.*",
