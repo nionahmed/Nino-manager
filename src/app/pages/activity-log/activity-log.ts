@@ -218,14 +218,14 @@ export class ActivityLogComponent {
     this.customDuration.set(isNaN(num) || num <= 0 ? null : num);
   }
 
-  addActivity(): void {
+  async addActivity(): Promise<void> {
     if (!this.canAdd()) return;
 
     const tsValue = this.timestamp();
     const isoString = new Date(tsValue).toISOString();
     const dateStr = tsValue.slice(0, 10); // YYYY-MM-DD
 
-    this.storage.addActivity({
+    await this.storage.addActivity({
       name: this.name().trim(),
       category: this.category(),
       duration: this.duration(),
@@ -250,8 +250,8 @@ export class ActivityLogComponent {
     this.confirmDeleteId.set(null);
   }
 
-  confirmDelete(id: string): void {
-    this.storage.deleteActivity(id);
+  async confirmDelete(id: string): Promise<void> {
+    await this.storage.deleteActivity(id);
     this.confirmDeleteId.set(null);
   }
 

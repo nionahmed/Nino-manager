@@ -230,82 +230,6 @@
 }
 
 // ============================================
-// INPUT GROUP
-// ============================================
-.input-group {
-  width: 100%;
-  margin-top: $space-sm;
-}
-
-.input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: $radius-md;
-  transition: all $transition-base;
-  overflow: hidden;
-
-  &:focus-within {
-    border-color: rgba(108, 92, 231, 0.5);
-    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.12);
-    background: rgba(255, 255, 255, 0.08);
-  }
-}
-
-.input-icon {
-  position: absolute;
-  left: $space-md;
-  color: rgba(255, 255, 255, 0.35);
-  pointer-events: none;
-  font-size: 20px !important;
-  transition: color $transition-base;
-
-  .input-wrapper:focus-within & {
-    color: rgba(108, 92, 231, 0.8);
-  }
-}
-
-.password-input {
-  width: 100%;
-  padding: $space-md $space-xxl $space-md 48px;
-  background: transparent;
-  border: none;
-  color: #ffffff;
-  font-size: $font-md;
-  min-height: 52px;
-  outline: none;
-
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.3);
-  }
-
-  &:-webkit-autofill {
-    -webkit-box-shadow: 0 0 0 30px rgba(10, 10, 26, 0.95) inset !important;
-    -webkit-text-fill-color: #ffffff !important;
-  }
-}
-
-.toggle-password {
-  position: absolute;
-  right: $space-xs;
-  @include touch-target;
-  border-radius: $radius-sm;
-  color: rgba(255, 255, 255, 0.35);
-  transition: all $transition-fast;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-
-  &:hover {
-    color: rgba(255, 255, 255, 0.7);
-    background: rgba(255, 255, 255, 0.06);
-  }
-}
-
-// ============================================
 // ERROR MESSAGE
 // ============================================
 .error-message {
@@ -329,64 +253,68 @@
 }
 
 // ============================================
-// LOGIN BUTTON
+// GOOGLE SIGN-IN BUTTON
 // ============================================
-.login-btn {
+.google-btn {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: $space-sm;
+  gap: $space-md;
   padding: $space-md $space-lg;
   min-height: 52px;
   border: none;
   border-radius: $radius-md;
-  background: linear-gradient(135deg, #6c5ce7, #7c6cf7, #6c5ce7);
-  background-size: 200% 200%;
-  color: #ffffff;
+  background: #ffffff;
+  color: #3c4043;
   font-size: $font-md;
   font-weight: 600;
   cursor: pointer;
   transition: all $transition-base;
   position: relative;
   overflow: hidden;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
+  margin-top: $space-sm;
 
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      135deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.1) 50%,
-      transparent 100%
-    );
-    background-size: 200% 100%;
-    opacity: 0;
-    transition: opacity $transition-base;
+  .google-icon {
+    flex-shrink: 0;
   }
 
   &:hover:not(:disabled) {
-    background-position: 100% 50%;
     box-shadow:
-      0 4px 20px rgba(108, 92, 231, 0.4),
-      0 0 40px rgba(108, 92, 231, 0.15);
+      0 4px 20px rgba(0, 0, 0, 0.25),
+      0 1px 3px rgba(0, 0, 0, 0.15);
     transform: translateY(-1px);
-
-    &::before {
-      opacity: 1;
-      animation: shimmer 1.5s ease-in-out infinite;
-    }
+    background: #f8f9fa;
   }
 
   &:active:not(:disabled) {
     transform: translateY(0) scale(0.98);
+    background: #f1f3f4;
   }
 
   &:disabled {
     opacity: 0.7;
     cursor: not-allowed;
+  }
+}
+
+// ============================================
+// PRIVACY NOTE
+// ============================================
+.privacy-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-xs;
+  font-size: $font-xs;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+  margin-top: -$space-sm;
+
+  .material-icons {
+    font-size: 12px !important;
+    opacity: 0.7;
   }
 }
 
@@ -418,3 +346,4 @@
     &.orb-3 { width: 150px; height: 150px; }
   }
 }
+

@@ -1,74 +1,130 @@
-import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, signal, PLATFORM_ID, inject, NgZone } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  query,
+  writeBatch,
+  setDoc,
+  Unsubscribe,
+} from 'firebase/firestore';
+import { db } from '../firebase.config';
+import { AuthService } from './auth.service';
 import {
   Task,
   TaskInstance,
   ActivityLog,
   DailyNote,
   TaskStatus,
-  PomodoroSession,
 } from '../models/task.model';
 
 @Injectable({ providedIn: 'root' })
 export class StorageService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
-
-  private readonly KEYS = {
-    tasks: 'nino_tasks',
-    instances: 'nino_instances',
-    activities: 'nino_activities',
-    notes: 'nino_notes',
-    pomodoros: 'nino_pomodoros',
-    settings: 'nino_settings',
-  };
+  private readonly authService = inject(AuthService);
+  private readonly zone = inject(NgZone);
 
   readonly tasks = signal<Task[]>([]);
   readonly instances = signal<TaskInstance[]>([]);
   readonly activities = signal<ActivityLog[]>([]);
   readonly notes = signal<DailyNote[]>([]);
 
+  private unsubscribers: Unsubscribe[] = [];
+
   constructor() {
-    if (this.isBrowser) {
-      this.loadAll();
-      window.addEventListener('storage', (e) => this.onStorageChange(e));
-    }
-  }
-
-  // ============================
-  // HELPERS
-  // ============================
-  private generateId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  }
-
-  private get<T>(key: string): T[] {
-    if (!this.isBrowser) return [];
-    try {
-      const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : [];
-    } catch {
-      return [];
-    }
-  }
-
-  private set(key: string, data: unknown): void {
     if (!this.isBrowser) return;
-    localStorage.setItem(key, JSON.stringify(data));
+
+    // Wait for auth state, then subscribe to Firestore
+    // Use an effect-like pattern: watch the auth user signal
+    const checkAuth = setInterval(() => {
+      const uid = this.authService.getUid();
+      if (uid) {
+        clearInterval(checkAuth);
+        this.subscribeToFirestore(uid);
+      }
+      // Also handle logout
+      if (!this.authService.isLoading() && !uid) {
+        this.clearData();
+      }
+    }, 200);
   }
 
-  private loadAll(): void {
-    this.tasks.set(this.get<Task>(this.KEYS.tasks));
-    this.instances.set(this.get<TaskInstance>(this.KEYS.instances));
-    this.activities.set(this.get<ActivityLog>(this.KEYS.activities));
-    this.notes.set(this.get<DailyNote>(this.KEYS.notes));
-    this.generateInstancesForToday();
+  private subscribeToFirestore(uid: string): void {
+    // Unsubscribe from any previous listeners
+    this.unsubscribers.forEach(unsub => unsub());
+    this.unsubscribers = [];
+
+    const userDoc = `users/${uid}`;
+
+    // Tasks listener
+    const tasksUnsub = onSnapshot(
+      collection(db, `${userDoc}/tasks`),
+      (snapshot) => {
+        this.zone.run(() => {
+          const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Task));
+          this.tasks.set(items);
+        });
+      }
+    );
+    this.unsubscribers.push(tasksUnsub);
+
+    // Instances listener
+    const instancesUnsub = onSnapshot(
+      collection(db, `${userDoc}/instances`),
+      (snapshot) => {
+        this.zone.run(() => {
+          const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as TaskInstance));
+          this.instances.set(items);
+        });
+      }
+    );
+    this.unsubscribers.push(instancesUnsub);
+
+    // Activities listener
+    const activitiesUnsub = onSnapshot(
+      collection(db, `${userDoc}/activities`),
+      (snapshot) => {
+        this.zone.run(() => {
+          const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as ActivityLog));
+          this.activities.set(items);
+        });
+      }
+    );
+    this.unsubscribers.push(activitiesUnsub);
+
+    // Notes listener
+    const notesUnsub = onSnapshot(
+      collection(db, `${userDoc}/notes`),
+      (snapshot) => {
+        this.zone.run(() => {
+          const items = snapshot.docs.map(d => ({ ...d.data(), date: d.id } as DailyNote));
+          this.notes.set(items);
+        });
+      }
+    );
+    this.unsubscribers.push(notesUnsub);
+
+    // Generate today's instances after a short delay for data to load
+    setTimeout(() => this.zone.run(() => this.generateInstancesForToday()), 1500);
   }
 
-  private onStorageChange(e: StorageEvent): void {
-    if (e.key && Object.values(this.KEYS).includes(e.key)) {
-      this.loadAll();
-    }
+  private clearData(): void {
+    this.tasks.set([]);
+    this.instances.set([]);
+    this.activities.set([]);
+    this.notes.set([]);
+    this.unsubscribers.forEach(unsub => unsub());
+    this.unsubscribers = [];
+  }
+
+  private getUserPath(): string | null {
+    const uid = this.authService.getUid();
+    return uid ? `users/${uid}` : null;
   }
 
   // ============================
@@ -92,49 +148,62 @@ export class StorageService {
   // ============================
   // TASKS CRUD
   // ============================
-  addTask(task: Omit<Task, 'id' | 'createdAt'>): Task {
-    const newTask: Task = {
+  async addTask(task: Omit<Task, 'id' | 'createdAt'>): Promise<Task | null> {
+    const path = this.getUserPath();
+    if (!path) return null;
+
+    const newTask: any = {
       ...task,
-      id: this.generateId(),
       createdAt: new Date().toISOString(),
     };
-    const all = [...this.tasks(), newTask];
-    this.tasks.set(all);
-    this.set(this.KEYS.tasks, all);
-    // Generate instance for the task's start date and today
-    const genStart = newTask.startDate <= this.today() ? this.today() : newTask.startDate;
-    this.generateInstancesForDateRange(genStart, genStart);
-    return newTask;
+
+    const docRef = await addDoc(collection(db, `${path}/tasks`), newTask);
+    const created = { ...newTask, id: docRef.id } as Task;
+
+    // Generate instance for the task's start date
+    const genStart = created.startDate <= this.today() ? this.today() : created.startDate;
+    await this.generateInstancesForDateRangeAsync(genStart, genStart);
+
+    return created;
   }
 
-  updateTask(id: string, updates: Partial<Task>): void {
-    const all = this.tasks().map((t) => (t.id === id ? { ...t, ...updates } : t));
-    this.tasks.set(all);
-    this.set(this.KEYS.tasks, all);
+  async updateTask(id: string, updates: Partial<Task>): Promise<void> {
+    const path = this.getUserPath();
+    if (!path) return;
 
-    // Clean up any pending instances that are no longer valid (e.g. if start date moved to future)
+    const { id: _, ...data } = updates as any;
+    await updateDoc(doc(db, `${path}/tasks`, id), data);
+
+    // Clean up invalid pending instances
     const task = this.getTask(id);
     if (task) {
-      const validInstances = this.instances().filter(i => {
-        if (i.taskId !== id) return true;
-        if (i.status !== 'pending') return true; // keep history
-        return this.taskShouldOccurOnDate(task, i.date);
+      const updatedTask = { ...task, ...updates };
+      const invalidInstances = this.instances().filter(i => {
+        if (i.taskId !== id) return false;
+        if (i.status !== 'pending') return false;
+        return !this.taskShouldOccurOnDate(updatedTask, i.date);
       });
-      if (validInstances.length !== this.instances().length) {
-        this.instances.set(validInstances);
-        this.set(this.KEYS.instances, validInstances);
+      for (const inst of invalidInstances) {
+        await deleteDoc(doc(db, `${path}/instances`, inst.id));
       }
     }
   }
 
-  deleteTask(id: string): void {
-    const all = this.tasks().filter((t) => t.id !== id);
-    this.tasks.set(all);
-    this.set(this.KEYS.tasks, all);
-    // Also delete related instances
-    const instances = this.instances().filter((i) => i.taskId !== id);
-    this.instances.set(instances);
-    this.set(this.KEYS.instances, instances);
+  async deleteTask(id: string): Promise<void> {
+    const path = this.getUserPath();
+    if (!path) return;
+
+    await deleteDoc(doc(db, `${path}/tasks`, id));
+
+    // Delete related instances
+    const relatedInstances = this.instances().filter(i => i.taskId === id);
+    const batch = writeBatch(db);
+    for (const inst of relatedInstances) {
+      batch.delete(doc(db, `${path}/instances`, inst.id));
+    }
+    if (relatedInstances.length > 0) {
+      await batch.commit();
+    }
   }
 
   getTask(id: string): Task | undefined {
@@ -146,23 +215,19 @@ export class StorageService {
   // ============================
   taskShouldOccurOnDate(task: Task, dateStr: string): boolean {
     if (task.archived) return false;
-    // Use startDate if available, otherwise fall back to createdAt date
     const taskStartDate = task.startDate || this.formatDate(new Date(task.createdAt));
-    // Don't generate instances before the task's start date
     if (dateStr < taskStartDate) return false;
     const dayOfWeek = this.getDayOfWeek(dateStr);
     switch (task.repeat) {
       case 'daily':
         return true;
       case 'weekly': {
-        // Use the day of week from the start date
         const startDow = this.getDayOfWeek(taskStartDate);
         return dayOfWeek === startDow;
       }
       case 'custom':
         return task.customDays?.includes(dayOfWeek) ?? false;
       case 'none':
-        // One-time task: occurs on its start date
         return dateStr === taskStartDate;
       default:
         return false;
@@ -173,16 +238,13 @@ export class StorageService {
     if (task.archived) return null;
     let d = new Date();
     const todayStr = this.formatDate(d);
-    
-    // Ensure we have a valid start date to compare
+
     const taskStartDate = task.startDate || this.formatDate(new Date(task.createdAt));
     let checkDateStr = todayStr > taskStartDate ? todayStr : taskStartDate;
-    
+
     for (let i = 0; i < 365; i++) {
       if (this.taskShouldOccurOnDate(task, checkDateStr)) {
-        // Check if this instance is already done/missed/not-required
         const inst = this.instances().find(inst => inst.taskId === task.id && inst.date === checkDateStr);
-        // If it doesn't exist, or it is pending, this is the next occurrence
         if (!inst || inst.status === 'pending') {
           return checkDateStr;
         }
@@ -201,7 +263,6 @@ export class StorageService {
     const task = this.getTask(taskId);
     if (!task) return null;
 
-    // Return a virtual instance WITHOUT saving it to storage
     return {
       id: `virtual_${taskId}_${dateStr}`,
       taskId,
@@ -211,12 +272,20 @@ export class StorageService {
   }
 
   generateInstancesForToday(): void {
-    this.generateInstancesForDateRange(this.today(), this.today());
+    this.generateInstancesForDateRangeAsync(this.today(), this.today());
   }
 
   generateInstancesForDateRange(startDate: string, endDate: string): void {
-    const existingInstances = [...this.instances()];
+    this.generateInstancesForDateRangeAsync(startDate, endDate);
+  }
+
+  private async generateInstancesForDateRangeAsync(startDate: string, endDate: string): Promise<void> {
+    const path = this.getUserPath();
+    if (!path) return;
+
+    const existingInstances = this.instances();
     const tasks = this.tasks();
+    const batch = writeBatch(db);
     let changed = false;
 
     const start = new Date(startDate + 'T00:00:00');
@@ -230,8 +299,8 @@ export class StorageService {
           (i) => i.taskId === task.id && i.date === dateStr
         );
         if (!exists) {
-          existingInstances.push({
-            id: this.generateId(),
+          const newDocRef = doc(collection(db, `${path}/instances`));
+          batch.set(newDocRef, {
             taskId: task.id,
             date: dateStr,
             status: 'pending',
@@ -242,8 +311,7 @@ export class StorageService {
     }
 
     if (changed) {
-      this.instances.set(existingInstances);
-      this.set(this.KEYS.instances, existingInstances);
+      await batch.commit();
     }
   }
 
@@ -255,58 +323,45 @@ export class StorageService {
     return this.instances().filter((i) => i.date >= start && i.date <= end);
   }
 
-  updateInstanceStatus(instanceId: string, status: TaskStatus): void {
+  async updateInstanceStatus(instanceId: string, status: TaskStatus): Promise<void> {
+    const path = this.getUserPath();
+    if (!path) return;
+
     if (instanceId.startsWith('virtual_')) {
-      // instanceId format: virtual_taskId_dateStr
       const parts = instanceId.split('_');
       const taskId = parts[1];
       const dateStr = parts.slice(2).join('_');
-      
-      const newInst: TaskInstance = {
-        id: this.generateId(),
+
+      await addDoc(collection(db, `${path}/instances`), {
         taskId,
         date: dateStr,
         status,
-        completedAt: status === 'done' ? new Date().toISOString() : undefined,
-      };
-      
-      const all = [...this.instances(), newInst];
-      this.instances.set(all);
-      this.set(this.KEYS.instances, all);
+        completedAt: status === 'done' ? new Date().toISOString() : null,
+      });
       return;
     }
 
-    const all = this.instances().map((i) =>
-      i.id === instanceId
-        ? {
-            ...i,
-            status,
-            completedAt: status === 'done' ? new Date().toISOString() : undefined,
-          }
-        : i
-    );
-    this.instances.set(all);
-    this.set(this.KEYS.instances, all);
+    await updateDoc(doc(db, `${path}/instances`, instanceId), {
+      status,
+      completedAt: status === 'done' ? new Date().toISOString() : null,
+    });
   }
 
   // ============================
   // ACTIVITY LOG
   // ============================
-  addActivity(activity: Omit<ActivityLog, 'id'>): ActivityLog {
-    const newActivity: ActivityLog = {
-      ...activity,
-      id: this.generateId(),
-    };
-    const all = [...this.activities(), newActivity];
-    this.activities.set(all);
-    this.set(this.KEYS.activities, all);
-    return newActivity;
+  async addActivity(activity: Omit<ActivityLog, 'id'>): Promise<ActivityLog | null> {
+    const path = this.getUserPath();
+    if (!path) return null;
+
+    const docRef = await addDoc(collection(db, `${path}/activities`), activity);
+    return { ...activity, id: docRef.id } as ActivityLog;
   }
 
-  deleteActivity(id: string): void {
-    const all = this.activities().filter((a) => a.id !== id);
-    this.activities.set(all);
-    this.set(this.KEYS.activities, all);
+  async deleteActivity(id: string): Promise<void> {
+    const path = this.getUserPath();
+    if (!path) return;
+    await deleteDoc(doc(db, `${path}/activities`, id));
   }
 
   getActivitiesForDate(date: string): ActivityLog[] {
@@ -320,13 +375,15 @@ export class StorageService {
   // ============================
   // DAILY NOTES
   // ============================
-  setNote(date: string, note: string): void {
-    let all = this.notes().filter((n) => n.date !== date);
+  async setNote(date: string, note: string): Promise<void> {
+    const path = this.getUserPath();
+    if (!path) return;
+
     if (note.trim()) {
-      all = [...all, { date, note: note.trim() }];
+      await setDoc(doc(db, `${path}/notes`, date), { note: note.trim() });
+    } else {
+      await deleteDoc(doc(db, `${path}/notes`, date));
     }
-    this.notes.set(all);
-    this.set(this.KEYS.notes, all);
   }
 
   getNote(date: string): string {
@@ -358,7 +415,6 @@ export class StorageService {
   getStreak(): number {
     let streak = 0;
     const d = new Date();
-    // Start from yesterday if today isn't complete yet
     d.setDate(d.getDate() - 1);
     while (true) {
       const dateStr = this.formatDate(d);
@@ -373,7 +429,6 @@ export class StorageService {
         break;
       }
     }
-    // Check today too
     const todayCompletion = this.getCompletionForDate(this.today());
     if (todayCompletion >= 80) streak++;
     return streak;
@@ -391,7 +446,6 @@ export class StorageService {
         breakdown[cat] = (breakdown[cat] || 0) + task.duration;
       }
     }
-    // Add unplanned activities
     const activities = this.getActivitiesForDateRange(start, end);
     for (const a of activities) {
       breakdown[a.category] = (breakdown[a.category] || 0) + a.duration;
@@ -441,25 +495,43 @@ export class StorageService {
     });
   }
 
-  importData(jsonStr: string): boolean {
+  async importData(jsonStr: string): Promise<boolean> {
+    const path = this.getUserPath();
+    if (!path) return false;
+
     try {
       const data = JSON.parse(jsonStr);
+      const batch = writeBatch(db);
+
       if (data.tasks) {
-        this.tasks.set(data.tasks);
-        this.set(this.KEYS.tasks, data.tasks);
+        for (const task of data.tasks) {
+          const { id, ...taskData } = task;
+          const ref = doc(collection(db, `${path}/tasks`));
+          batch.set(ref, taskData);
+        }
       }
       if (data.instances) {
-        this.instances.set(data.instances);
-        this.set(this.KEYS.instances, data.instances);
+        for (const inst of data.instances) {
+          const { id, ...instData } = inst;
+          const ref = doc(collection(db, `${path}/instances`));
+          batch.set(ref, instData);
+        }
       }
       if (data.activities) {
-        this.activities.set(data.activities);
-        this.set(this.KEYS.activities, data.activities);
+        for (const act of data.activities) {
+          const { id, ...actData } = act;
+          const ref = doc(collection(db, `${path}/activities`));
+          batch.set(ref, actData);
+        }
       }
       if (data.notes) {
-        this.notes.set(data.notes);
-        this.set(this.KEYS.notes, data.notes);
+        for (const note of data.notes) {
+          const ref = doc(db, `${path}/notes`, note.date);
+          batch.set(ref, { note: note.note });
+        }
       }
+
+      await batch.commit();
       return true;
     } catch {
       return false;

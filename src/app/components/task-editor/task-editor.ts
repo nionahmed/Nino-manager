@@ -146,7 +146,7 @@ export class TaskEditorComponent implements OnInit {
   }
 
   // Save
-  save(): void {
+  async save(): Promise<void> {
     if (!this.isValid()) return;
 
     const duration = this.computedDuration();
@@ -166,9 +166,9 @@ export class TaskEditorComponent implements OnInit {
 
     const id = this.taskId();
     if (id) {
-      this.storage.updateTask(id, taskData);
+      await this.storage.updateTask(id, taskData);
     } else {
-      this.storage.addTask(taskData as Omit<Task, 'id' | 'createdAt'>);
+      await this.storage.addTask(taskData as Omit<Task, 'id' | 'createdAt'>);
     }
 
     this.saved.emit();
@@ -176,7 +176,7 @@ export class TaskEditorComponent implements OnInit {
   }
 
   // Duplicate
-  duplicate(): void {
+  async duplicate(): Promise<void> {
     if (!this.isValid()) return;
 
     const duration = this.computedDuration();
@@ -194,7 +194,7 @@ export class TaskEditorComponent implements OnInit {
       notes: this.notes().trim() || undefined,
     };
 
-    this.storage.addTask(taskData);
+    await this.storage.addTask(taskData);
     this.saved.emit();
     this.close.emit();
   }
@@ -208,10 +208,10 @@ export class TaskEditorComponent implements OnInit {
     this.showDeleteConfirm.set(false);
   }
 
-  deleteTask(): void {
+  async deleteTask(): Promise<void> {
     const id = this.taskId();
     if (id) {
-      this.storage.deleteTask(id);
+      await this.storage.deleteTask(id);
       this.saved.emit();
       this.close.emit();
     }

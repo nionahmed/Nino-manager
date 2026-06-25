@@ -24,8 +24,8 @@ export class DailyNoteComponent {
     this.isEditing.set(true);
   }
 
-  saveNote(): void {
-    this.storage.setNote(this.date(), this.noteText());
+  async saveNote(): Promise<void> {
+    await this.storage.setNote(this.date(), this.noteText());
     this.isEditing.set(false);
   }
 

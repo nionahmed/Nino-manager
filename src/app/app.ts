@@ -82,8 +82,8 @@ export class App implements OnInit {
     this.editorService.close();
   }
 
-  logout(): void {
-    this.auth.logout();
+  async logout(): Promise<void> {
+    await this.auth.logout();
     this.router.navigate(['/login']);
   }
 
