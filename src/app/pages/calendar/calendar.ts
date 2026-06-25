@@ -53,7 +53,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
   private timerInterval: ReturnType<typeof setInterval> | null = null;
 
   // Constants
-  readonly hours = Array.from({ length: 19 }, (_, i) => i + 6); // 6AM to midnight (0:00)
+  readonly hours = Array.from({ length: 24 }, (_, i) => i); // 12AM to 11PM
   readonly dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   readonly views: { key: CalendarView; label: string }[] = [
     { key: 'day', label: 'Day' },
@@ -142,10 +142,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
         const [h, m] = task.startTime.split(':').map(Number);
         const startMinutes = h * 60 + m;
-        const startFromGrid = startMinutes - 6 * 60; // grid starts at 6AM
-        if (startFromGrid < 0) continue; // before 6AM, skip
-
-        const top = (startFromGrid / 60) * hourHeight;
+        const top = (startMinutes / 60) * hourHeight;
         const height = Math.max((task.duration / 60) * hourHeight, hourHeight * 0.35);
 
         positioned.push({ instance: inst, task, top, height });
@@ -429,9 +426,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
   private updateCurrentTimeLine(): void {
     const now = new Date();
     const minutes = now.getHours() * 60 + now.getMinutes();
-    const fromGrid = minutes - 6 * 60;
-    // For day/3day view (60px/hr)
-    this.currentTimeTop.set((fromGrid / 60) * 60);
+    this.currentTimeTop.set((minutes / 60) * 60);
   }
 
   private getTasksForDate(dateStr: string): { task: Task; instance: TaskInstance }[] {
